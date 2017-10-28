@@ -1,0 +1,7 @@
+[Unit]
+Description=This cranks up the governor service of the co2sense
+[Service]
+Type=simple
+ExecStart=/home/pi/src/co2sensing/bin/upstart
+[Install]
+WantedBy=graphical.target
