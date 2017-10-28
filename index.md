@@ -1,37 +1,8 @@
-## Welcome to GitHub Pages
+## Air monitoring , awareness of the masses :
+****
+Masses may not be aware of how bad the air quality really gets. Human senses can ofcourse indicate a problem with the air we breathe with symptoms but that is only when beyond the thresholds. We dont have any sense of the quantification of the air components ,only when we faint do we realise the CO / Co2 is byond any acceptable limits.
 
-You can use the [editor on GitHub](https://github.com/EensyMachines/airnose-device/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Our product here has a sense of whats the current measure of the Co2, CO, So2, No2 and being connected to the cloud / internet it can broadcast information to the general masses.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/EensyMachines/airnose-device/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+- It can in general keep the masses aware of the low quality of the atmosphere we live in
+- It then becomes easy to drive environmental messages across all the sections of the society since we have our claims backed by solid historical data.
