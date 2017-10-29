@@ -13,10 +13,9 @@ Our product here has a sense of whats the current measure of the Co2, CO, So2, N
 ## Coincident spikes in Co2 and dependants :
 ****
 
-Measuring Co2 over the time axis along with other parameters can reveal coincident changes in the graphs and hence the possibility of an underlying mathematical relation.
-Our best chance is to observe the spykes  in the graphical at the excat same time in temperature and light to know if the gaseous content really changes with time.
+Measuring Co2 over the time axis along with other parameters (time, light, humidity, temperature) can reveal coincident changes in the graphs and hence the possibility of an underlying mathematical relation.Our best chance is to observe the spykes in the trends  in temperature,  light, humidity to know if the gaseous pollutant content really changes with other influencers.
 
-Winter in the client's premises needs a close vigil of the movment of Co2 content in parts per million. With the rising density we would have a intuitive rise in the Co2 corresponding to the increased density of air. Client needs to track other gaseous content as well.
+Winter in the client's premises needs a close vigil of the movment of Co2/ CO content in parts per million (ppm). With the rising density we would have a intuitive rise in the Co2. Client needs to track other gaseous content as well.
 
 - Carbon monoxide
 - Nitrous oxide
