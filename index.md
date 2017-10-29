@@ -1,12 +1,14 @@
 <!-- Making the reader aware of the problem statement and the KPIs that need be monitored. -->
 ## Air monitoring , awareness of the masses :
 ****
-Masses may not be aware of how bad the air quality really gets. Human senses can ofcourse indicate a problem with the air we breathe with symptoms but that is only when beyond the thresholds. We dont have any sense of the quantification of the air components ,only when we faint do we realise the CO / Co2 is byond any acceptable limits.
+Masses may not be aware of how bad the air quality really gets. Human senses can ofcourse indicate a problem with the air we breathe with only the symptoms beyond the thresholds. We dont have any sense of the quantification of the air components. Manifestation of symptoms is often too late to actionize anything. Sensing the gaseous components continuously would help raise an alarm well before things spin out of hand.
 
-Our product here has a sense of whats the current measure of the Co2, CO, So2, No2 and being connected to the cloud / internet it can broadcast information to the general masses.
+Our product here has a sense of whats the current measure of the Co2, CO, So2, No2 and being connected to the cloud / internet it can broadcast information to the general masses , on handheld or desk devices.
 
-- It can in general keep the masses aware of the low quality of the atmosphere we live in
-- It then becomes easy to drive environmental messages across all the sections of the society since we have our claims backed by solid historical data.
+### What are the tangible benefits that we are looking for ? :
+
+- It can in general keep the masses aware of the low quality of the atmosphere, raising an alarm well before dire situations.
+- It then becomes easy to drive environmental messages across to all the sections of the society since we have our claims backed by solid historical data.
 
 ## Coincident spikes in Co2 and dependants :
 ****
