@@ -1,7 +1,7 @@
 <!-- Making the reader aware of the problem statement and the KPIs that need be monitored. -->
 ## Air monitoring , awareness of the masses :
 ****
-Masses may not be aware of how bad the air quality really gets. Human senses can ofcourse indicate a problem with the air we breathe with only the symptoms beyond the thresholds. We dont have any sense of the quantification of the air components. Manifestation of symptoms is often too late to actionize anything. Sensing the gaseous components continuously would help raise an alarm well before things spin out of hand.
+**Masses may not be aware of quantum of the air quality**. Human senses can ofcourse indicate a problem with the air we breathe with only the symptoms beyond the thresholds. (fainting, dizziness, blurred vision, sore eyes...) We dont have any sense of the quantification of the air components (gaseous). Manifestation of symptoms is often too late for action. Sensing the gaseous components using IoT solutions continuously would help raise an alarm well before things spin out of hand.
 
 Our product here has a sense of whats the current measure of the Co2, CO, So2, No2 and being connected to the cloud / internet it can broadcast information to the general masses , on handheld or desk devices.
 
@@ -25,11 +25,13 @@ Winter in the client's premises needs a close vigil of the movment of Co2/ CO co
 ## Cloud connected solution:
 ****
 Devices working on the field and gathering reliable timely information would only be futile if NOT connected to cloud. The solution needs to push all the data records / information to cloud.
-Web applications then can tune in such database to then bring the insights to the desk.
+Web applications then can tune in such databases to then bring the insights to the desk.
 
-Cloud connectivity cannot be guarenteed 100% and in such cases , fog computing approach of maintaining offline data on the device is also advised. As such when the offline data accumulates and the connection is restored the data can then be differentially appended.
+Fog computing approach for holding data on the device is best advised when we have no guarentee of 100% uptime of cloud endpoints. As such when the offline data accumulates and the connection is restored the data can then be differentially appended.
 
-Services running on the cloud are HTTP REST tuned. They continuously listen to the devices pings and supply the data as requested by the web applications. Services as these are highly available and nimble enough to deal with concurrent requests at the same time. Service to Device channel works in the polling mode. Devices can ping and request for data, but services would not be able to push notifications unless the devices are running on static IP addresses.
+Services running on the cloud are HTTP REST tuned. They continuously listen to the devices pings and supply the data as requested by the web applications. **Services as these are highly available and nimble** enough to deal with concurrent requests at the same time.
+
+**Service to Device channel works in the polling mode**. Devices can ping and request for data, but services would not be able to push notifications unless the devices are running on static IP addresses. In the current setup we would like to keep this channel open one way.
 
 
 ## Device registration and identification :
