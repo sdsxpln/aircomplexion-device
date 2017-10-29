@@ -20,6 +20,7 @@ Winter in the client's premises needs a close vigil of the movment of Co2 conten
 - Nitrous oxide
 - Sulphur di-oxide
 
+<!-- this section gives the problem statement and how the system works on a very high level -->
 ## Cloud connected solution:
 ****
 Devices working on the field and gathering reliable timely information would only be futile if NOT connected to cloud. The solution needs to push all the data records / information to cloud.
@@ -27,12 +28,7 @@ Web applications then can tune in such database to then bring the insights to th
 
 Cloud connectivity cannot be guarenteed 100% and in such cases , fog computing approach of maintaining offline data on the device is also advised. As such when the offline data accumulates and the connection is restored the data can then be differentially appended.
 
-Services running on the cloud are HTTP REST tuned. They continuously listen to the devices pings and supply the data as requested by the web applications.
-
-
-<!--  this section makes more business sense-->
-## Monitoring Co2 and pinging values to the database :
-****
+Services running on the cloud are HTTP REST tuned. They continuously listen to the devices pings and supply the data as requested by the web applications. Services as these are highly available and nimble enough to deal with concurrent requests at the same time. Service to Device channel works in the polling mode. Devices can ping and request for data, but services would not be able to push notifications unless the devices are running on static IP addresses.
 
 
 <!-- this section  is way too technical to be put out here -->
