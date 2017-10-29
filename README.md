@@ -17,3 +17,6 @@ A project from the PiFarm suite of application to sense the air quality , measur
 9. [Knowing the current Co2 ppm of the earth](https://www.co2.earth/)
 10.[Libcurl for REST HTTP client from C](https://curl.haxx.se/libcurl/c/libcurl-tutorial.html)
 11.[Deg celcius symbol on the LCD](https://forum.arduino.cc/index.php?topic=78119.0)
+12.[MQ7 Co sensor specification](https://www.sparkfun.com/datasheets/Sensors/Biometric/MQ-7.pdf)
+13.[MQ7 Co calculations](http://www.instructables.com/id/Arduino-CO-Monitor-Using-MQ-7-Sensor/)
+14. [OLED I2c RPI programming in C](http://my-small-projects.blogspot.in/2015/05/raspberry-pi-digole-oled-13-display.html)
