@@ -31,6 +31,16 @@ Cloud connectivity cannot be guarenteed 100% and in such cases , fog computing a
 Services running on the cloud are HTTP REST tuned. They continuously listen to the devices pings and supply the data as requested by the web applications. Services as these are highly available and nimble enough to deal with concurrent requests at the same time. Service to Device channel works in the polling mode. Devices can ping and request for data, but services would not be able to push notifications unless the devices are running on static IP addresses.
 
 
+## Device registration and identification :
+****
+
+Services are meant for valid / authenticated devices to communicate only. The cloud endpoints should reject / filter unwanted pings from either rogue / expired devices. A device identifies itself with a unique 36 character id that is inturn hard embedded on it.
+
+Incase of product-under-license the devices can even extract license validity / renewal information from the cloud endpoints.We can even ask the device to hibernate incase the license is suspended / revoked.
+
+Since devices have their data tied to the UUID , it makes it possible to use the same cloud enpoints as if it were a platform. The UUID then also makes it possible to identify the data for each of the devices.
+
+
 <!-- this section  is way too technical to be put out here -->
 ## Reading MQ135 with your RPi3
 ****
