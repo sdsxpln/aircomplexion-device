@@ -24,3 +24,4 @@ A project from the PiFarm suite of application to sense the air quality , measur
 16. [Working principle of MQ7 gas sensor](http://davidhoulding.blogspot.in/2014/03/co-carbon-monoxide-gas-sensor-using.html)
 17. [List of all the gas sensors and various gasses detected](https://www.mysensors.org/build/gas)
 18. [Rpi pin out](https://github.com/DotNetToscana/IoTHelpers/wiki/Raspberry-Pi-2-and-3-Pinout)
+19. [STN2222A NPN Transistor datasheet](http://html.alldatasheet.com/html-pdf/280150/SEMTECH_ELEC/ST2N2222A/1738/2/ST2N2222A.html)
