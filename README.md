@@ -20,3 +20,4 @@ A project from the PiFarm suite of application to sense the air quality , measur
 12. [MQ7 Co sensor specification](https://www.sparkfun.com/datasheets/Sensors/Biometric/MQ-7.pdf)
 13. [MQ7 Co calculations](http://www.instructables.com/id/Arduino-CO-Monitor-Using-MQ-7-Sensor/)
 14. [OLED I2c RPI programming in C](http://my-small-projects.blogspot.in/2015/05/raspberry-pi-digole-oled-13-display.html)
+15. [Working with MQ7 CO sensor, working principle](http://www.learningaboutelectronics.com/Articles/MQ-7-carbon-monoxide-sensor-circuit-with-arduino.php)
