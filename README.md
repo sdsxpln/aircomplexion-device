@@ -25,3 +25,5 @@ A project from the PiFarm suite of application to sense the air quality , measur
 17. [List of all the gas sensors and various gasses detected](https://www.mysensors.org/build/gas)
 18. [Rpi pin out](https://github.com/DotNetToscana/IoTHelpers/wiki/Raspberry-Pi-2-and-3-Pinout)
 19. [STN2222A NPN Transistor datasheet](http://html.alldatasheet.com/html-pdf/280150/SEMTECH_ELEC/ST2N2222A/1738/2/ST2N2222A.html)
+20. [Hardware and software PWM on RPI](http://www.electronicwings.com/raspberry-pi/raspberry-pi-pwm-generation-using-python-and-c)
+21. [Editing text files remotely from RPI](http://www.linuxcircle.com/2016/07/22/editing-text-files-on-raspberry-pi-remotely-with-atom/)
