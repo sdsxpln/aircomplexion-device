@@ -5,12 +5,13 @@ void test_mq7_read (){
   int gpio =13 ; //this is the pin at which voltage control is attached
   heater_full_power(gpio);
   sleep(60);
-  heater_power(0.27, gpio);
+  heater_power(0.28, gpio); // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
   sleep(90);
   heater_full_power(gpio);
   int ok =0;
   int channel =3;
-  float co =ppm_co(&ok ,channel); //this is where you get the reading from sensor
+  mq7result result =ppm_co(&ok ,channel); //this is where you get the reading from sensor
+  printf("%.2f\t\t%.2f\t\t%.2f\n", result.volts, result.sensor_kohms, result.co_ppm);
   heater_off(gpio);
 }
 int main(int argc, char const *argv[]) {
