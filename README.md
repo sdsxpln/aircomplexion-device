@@ -20,9 +20,8 @@ A project from the PiFarm suite of application to sense the air quality , measur
 12. [MQ7 Co sensor specification](https://www.sparkfun.com/datasheets/Sensors/Biometric/MQ-7.pdf)
 13. [MQ7 Co calculations](http://www.instructables.com/id/Arduino-CO-Monitor-Using-MQ-7-Sensor/)
 14. [OLED I2c RPI programming in C](http://my-small-projects.blogspot.in/2015/05/raspberry-pi-digole-oled-13-display.html)
-<<<<<<< HEAD
+
 15. [Working with MQ7 CO sensor, working principle](http://www.learningaboutelectronics.com/Articles/MQ-7-carbon-monoxide-sensor-circuit-with-arduino.php)
-=======
 15. [Arduino reference page](file:///usr/share/doc/arduino/www.arduino.cc/en/Reference/HomePage.html)
 16. [Working principle of MQ7 gas sensor](http://davidhoulding.blogspot.in/2014/03/co-carbon-monoxide-gas-sensor-using.html)
 17. [List of all the gas sensors and various gasses detected](https://www.mysensors.org/build/gas)
@@ -32,4 +31,4 @@ A project from the PiFarm suite of application to sense the air quality , measur
 21. [Editing text files remotely from RPI](http://www.linuxcircle.com/2016/07/22/editing-text-files-on-raspberry-pi-remotely-with-atom/)
 22. [Threading in C programming quick byte](http://www.geeksforgeeks.org/multithreading-c-2/)
 23. [CO measurement for smokers](http://www.healthnz.co.nz/CObreath.htm)
->>>>>>> 6afd78148230fab070d02043f378befd6e6749e3
+24. [CO experiment on incense sticks](https://www.isiaq.org/docs/papers/2C4o5.pdf)
