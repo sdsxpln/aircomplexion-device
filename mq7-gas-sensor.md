@@ -1,5 +1,6 @@
 ### MQ7 , flying fish sensor module :
 ****
+![Sensor module commercially available](https://github.com/EensyMachines/airnose-device/blob/gh-pages/MQ-7-MODULE-CARBON-MONOXIDE-GAS-SENSOR.jpg)
 
 ### Schema of things and getting this connected to your RPi
 ****
