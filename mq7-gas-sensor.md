@@ -7,8 +7,10 @@ Carbon monoxide poisoning is the most common type of fatal air poisoning in many
 
 CO is measured in parts per million (ppm). To give you some perspective, the natural atmosphere is composed of 0.1ppm. In there average level in homes is 0.5-5ppm. The level near properly adjusted gas stoves in homes and from modern vehicle exhaust emissions is 5-15ppm. The exhaust from automobilies in Mexico City central area is 100-200ppm. The amount of CO that can be created from the exhaust from a home wood fire is 5000ppm. Concentrations as low as 667ppm may cause up to 50% of the body's hemoglobin to convert to carboxyhemoglobin. A level of 50% carboxyhemoglobin may result in seizure, coma, and fatality.
 
-Having this overview of carbon monoxide gives some background to how it is created and the real severe dangers it can pose. It creates context to just how important it is to be able to detect and measure the amount of CO that may be present in the environment during any given time
+Having this overview of carbon monoxide gives some background to how it is created and the real severe dangers it can pose. It creates context to just how important it is to be able to detect and measure the amount of CO that may be present in the environment during any given time.
+
 [Excerpt from here] (http://www.learningaboutelectronics.com/Articles/MQ-7-carbon-monoxide-sensor-circuit-with-arduino.php)
+
 ### MQ7 , flying fish sensor module :
 ****
 
