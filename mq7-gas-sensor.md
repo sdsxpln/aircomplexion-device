@@ -21,10 +21,17 @@ Having this overview of carbon monoxide gives some background to how it is creat
 ****
 
 ![Sensor module commercially available](MQ-7-MODULE-CARBON-MONOXIDE-GAS-SENSOR.png)
+
 This module is something you IoT enthusiasts would have come across on most of the e-commerce sites. If you have had any experiences with other gas sensor modules like MQ135, this might come to you as a surpirse. Requirement of of having to heat the sensor with differential power rating is one major change.
 
 The module though is well laid out and the sensor if operated correctly as in the datasheet guidelines , is capable of yeilding pretty stable and reliable values. What is then a bit twisted is the way the ppm reading derived from the voltage readings keeping the log-log characteristics in reference. Here I attempt to explain the method of arriving at the CO concetration. This may help you to design your algorithm running on Pi.
 
+The module has the following significant components mounted
+
+1. __Sensor__ : Is the heart of the module. It has a inbuild heater coil and also the Sno2 filament that accumulates the CO deposition to eventually show characteristic change in the electrical resistance. The heater and the filament are non-divisible, in the sense they cannot be separated any further from the packing.
+2. __Load resistance__ : This a surface mounted component along with the module. Unless you are getting a non-modular sensor [Like it is offered here](https://www.pololu.com/product/1482) you have a load resistance already in the module. Pick up a multimter and measure it between A0 and GND. - I have observed this to be 1KOhm in my case.
+3. __LEDs for threshold__ indication: There are times when you are looking for the digital signal from the sensor only when a certain threshold is crossed against set threshold levels.
+4. sensitivity adjustment __potentiometer__:This lets you adjust the threshold at which the digital signal should go high.
 
 ### Schema of things and getting this connected to your RPi
 ****
