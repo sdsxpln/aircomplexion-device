@@ -26,13 +26,12 @@ void* mq7_loop(void* arg){
   int channel =3;
   for (i = 0; i < 20; i++) {
     heater_full_power(gpio);
-    usleep(3*TOMICROSECS);
+    usleep(60*TOMICROSECS);
     heater_power(0.28, gpio); // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
-    usleep(2*TOMICROSECS);
+    usleep(90*TOMICROSECS);
     heater_full_power(gpio);
     mq7result result =ppm_co(&ok ,channel); //this is where you get the reading from sensor
     heater_off(gpio);
-    // this is where we go ahead to fill up values in the shared structure
     pthread_mutex_lock(&lock);
     myconditions.co_ppm=  result.co_ppm;
     myconditions.co_volts=result.volts;
@@ -45,16 +44,17 @@ void* mq7_loop(void* arg){
   printf("The sensing loop has now maxed out , we are exiting\n");
 }
 void* display_loop(void* arg){
-  char* disp ="";
+  char disp[100]="Sensor priming.."; //there is  a problem when we declare this as char*
   setup_lcd_4bitmode(2,16,RS,E,D0,D1,D2,D3);
   while(1) {
     pthread_mutex_lock(&lock);
     if (myconditions.co_ppm!=0) {
-      sprintf(disp,"Co ppm: %.3f\n", myconditions.co_ppm);
+      sprintf(disp,"Co ppm: %.3f", myconditions.co_ppm);
     }
-    else{disp="No values as yet";}
     lcd_message(disp);
+    usleep(2*TOMICROSECS);
     pthread_mutex_unlock(&lock);
+    printf("This is to test the running of the second thread\n");
     usleep(3*TOMICROSECS); //we try to refresh the display every 2 seconds
   }
 }
