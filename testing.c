@@ -54,7 +54,6 @@ void* display_loop(void* arg){
     lcd_message(disp);
     usleep(2*TOMICROSECS);
     pthread_mutex_unlock(&lock);
-    printf("This is to test the running of the second thread\n");
     usleep(3*TOMICROSECS); //we try to refresh the display every 2 seconds
   }
 }
@@ -73,8 +72,12 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
   size_t i =0;
-  for (i= 0; i < 2; i++) {
-    pthread_join(tids[i], NULL);
+  // to join threads remember that the display thread is a infinite loop
+  // we just need to wait on the sensing loop and then call to destroy the display loop
+  pthread_join(tids[0], NULL);
+  // this is where the display looop needs to be called off
+  if (pthread_cancel(tids[1])!=0) {
+    printf("There was a problem quitting the display loop\n");
   }
   printf("All the threads have returned, now destroying the mutex locks\n");
   pthread_mutex_destroy(&lock);
