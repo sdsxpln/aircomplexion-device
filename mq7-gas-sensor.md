@@ -5,11 +5,13 @@ Carbon monoxide (CO) is a very __dangerous gas which is odorless, colorless, and
 Carbon monoxide is produced from the __partial oxidation of carbon-containing compounds__; it forms when there is not enough oxygen to produce carbon dioxide (CO), such as when operating a stove or an internal combustion engine in an enclosed space. So it is really in enclosed spaces with __partial oxidation__ of carbon products that creates the danger of carbon monoxide production in homes or in business environments.
 Carbon monoxide poisoning is the most common type of fatal air poisoning in many countries. Being colorless, odorless, and tasteless, it is very hard to detect but __highly toxic.__ Carbon monoxide is absorbed through breathing and enters the bloodstream through gas exchange in the lungs. CO combines with hemoglobin to produce carboxyhemoglobin, which __usurps the space in hemoglobin that normally carries oxygen__, rendering blood inffective to carry and supply oxygen to bodily tissues. This leads to oxygen deprivation, which can be deadly.
 
-![Ill Effects of CO](https://www.google.co.in/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwj85eb2iMDXAhULtY8KHd3BDSAQjRwIBw&url=https%3A%2F%2Fwww.iims.org.uk%2Fhidden-dangers-carbon-monoxide-poisoning-afloat%2F&psig=AOvVaw0a_jdET1DF6kZI7vsKGBT1&ust=1510817767059812)
+![CO poisoning](carbon-monoxide-poisoning-1000x250.jpg)
 
 >> This gas is as nasty  as it can get. Being virtually transperant to majority of the human sense organs, it manifests itself only by symptoms bordering fatality.
 
 __CO is measured in parts per million (ppm).__ To give you some perspective, the natural atmosphere is composed of 0.1ppm. In there average level in homes is 0.5-5ppm. The level near properly adjusted gas stoves in homes and from modern vehicle exhaust emissions is 5-15ppm. The exhaust from automobilies in Mexico City central area is 100-200ppm.
+
+![CO kills](download.png)
 
 Having this overview of carbon monoxide gives some background to how it is created and the real severe dangers it can pose. It creates context to just how important it is to be able to detect and measure the amount of CO that may be present in the environment during any given time.
 
