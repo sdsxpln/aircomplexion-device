@@ -1,6 +1,6 @@
 ### MQ7 , flying fish sensor module :
 ****
-![Sensor module commercially available](MQ-7-MODULE-CARBON-MONOXIDE-GAS-SENSOR.jpg)
+![Sensor module commercially available](MQ-7-MODULE-CARBON-MONOXIDE-GAS-SENSOR.png)
 
 ### Schema of things and getting this connected to your RPi
 ****
