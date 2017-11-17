@@ -15,7 +15,7 @@ gcc -c ./display/display.c -I./display -o./bin/display.o
 ar crv ./bin/libco2.a ./bin/adc.o ./bin/ldr.o ./bin/mq135.o ./bin/lm35.o ./bin/alerts.o ./bin/display.o
 ranlib ./bin/libco2.a
 #this is where we make that into a running program
-gcc ./device.c -o./bin/device -lm -lwiringPi -lwiringPiDev -L ./bin -lco2
+gcc ./device.c -o./bin/device -lm -lwiringPi -lwiringPiDev -lpthread -L ./bin -lco2
 gcc ./upstart/upstart.c -o ./bin/upstart -lwiringPi
 sudo cp ./upstart/co2sense.service /etc/systemd/system/co2sense.service
 sudo systemctl disable co2sense.service
