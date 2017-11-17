@@ -20,5 +20,5 @@ gcc ./upstart/upstart.c -o ./bin/upstart -lwiringPi
 sudo cp ./upstart/co2sense.service /etc/systemd/system/co2sense.service
 sudo systemctl disable co2sense.service
 sudo systemctl enable co2sense.service
-sudo systemctl daemon-reload
-sudo systemctl start co2sense.service
+# sudo systemctl daemon-reload
+# sudo systemctl start co2sense.service

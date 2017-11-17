@@ -93,6 +93,7 @@ void* senseloop_temp(void* arg){
   while (1) {
     pthread_mutex_lock(&lock);
     ambientnow.temp_celcius = airtemp_now(&ok,1, CELCIUS);
+    // for the bug metioned - this temp reading is still not as expeted.
     if(ok!=0){perror("We have a problem reading the temperature channel on the ADS");}
     pthread_mutex_unlock(&lock);
     usleep(5*SECSTOMICROSECS);// we intend to measure the temp every 5 seconds
