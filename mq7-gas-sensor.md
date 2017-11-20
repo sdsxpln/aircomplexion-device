@@ -44,7 +44,11 @@ We would be using the A0 of the sensor , connected to the ADS (any channel from 
 
 ### MQ7 characteristics and first glance through the datasheet
 ***
+Rs/Ro ratio against the gaseous content in ppm is what is of our interest. 
+1. Ro is the sensor resistance in clean air at 20 deg C and 33% RH 
+2. Rs is the same sensor resistance at the time of measurement. 
 
+Challenge here is to create an environment exactly as per the requirements of Ro.
 
 ### Differential heating requirements and priming
 ****
