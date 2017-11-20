@@ -35,6 +35,12 @@ The module has the following significant components mounted
 
 ### Schema of things and getting this connected to your RPi
 ****
+The RPi 3B has no GPIOs that can take in analog in. Reading the voltage then has a direct limitation with RPi. We use a ADS115 (see specifications here)[http://www.ti.com/lit/ds/sbas444c/sbas444c.pdf] to then connect over I2C and read the voltages stored onto the ADS resgisters. 
+Instead of the ADS115 you can also opt for :
+1. MPC3208 + SPI
+2. can build your own RC timer - nerdy but still effective for the voltages we are reading.
+
+We would be using the A0 of the sensor , connected to the ADS (any channel from the available 4) and the ADS then inturn connected to RPi.
 
 ### MQ7 characteristics and first glance through the datasheet
 ***
