@@ -45,6 +45,7 @@ We would be using the A0 of the sensor , connected to the ADS (any channel from 
 ### MQ7 characteristics and first glance through the datasheet
 ***
 
+
 ### Differential heating requirements and priming
 ****
 
