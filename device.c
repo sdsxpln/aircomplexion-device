@@ -18,7 +18,7 @@ run           : ./bin/i2ctest
 #include "./alerts/alerts.h"
 #include "./display/display.h"
 #include <pthread.h>
-
+#include "./mq7/mq7.h"
 #define RS 9
 #define E 11
 #define D0 14
@@ -50,9 +50,10 @@ typedef struct {
   float co2_ppm;
   float temp_celcius;
   float light_cent;
+  float co_ppm;
   char err[128];
 }ambience; //this structure represents the conditions collectively that are thread safe
-ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .err=""}; //presetting the values in the structure
+ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .err="", .co_ppm=0}; //presetting the values in the structure
 pthread_t tids[10];
 void on_interrupt(int signal){
   digitalWrite(BLUE_GPIO, LOW);
@@ -60,6 +61,29 @@ void on_interrupt(int signal){
   digitalWrite(BUZZ_GPIO, LOW);
   lcd_clear();
   exit(0);
+}
+void* senseloop_co(void* arg){
+  int gpio =13 ; //this needs to out of this as a local variable
+  int ok =0;
+  int channel =3; //this is again hardware configuration
+  while(1) {
+    // heater_full_power(gpio);//full power heater for 60 secs
+    // usleep(60*SECSTOMICROSECS);
+    // // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
+    // // partial power heater for 90 secs
+    // heater_power(0.28, gpio);
+    // usleep(90*SECSTOMICROSECS);
+    // // turn on th full heater and then measure
+    // heater_full_power(gpio);
+    // mq7result result =ppm_co(&ok ,channel);
+    // // getting ready for the next measurement
+    // heater_off(gpio);
+    // pthread_mutex_lock(&lock);
+    // ambientnow.co_ppm=result.co_ppm; //psuhing to a shared structure
+    // pthread_mutex_unlock(&lock);
+    // // sleep only for one second before the next reading
+    usleep(5*SECSTOMICROSECS);
+  }
 }
 /*This runs the sensing loop and deposits the value of the co2 in the structure above*/
 void* senseloop_co2(void* arg){
@@ -131,17 +155,21 @@ int main(int argc, char const *argv[]) {
     printf("Failed to start activity thread\n");
     return 1;
   }
-  if (pthread_create(&tids[2], NULL,&senseloop_temp, NULL)!=0) {
+  if (pthread_create(&tids[2], NULL,&senseloop_co, NULL)!=0) {
     printf("Failed to start activity thread\n");
     return 1;
   }
-  if (pthread_create(&tids[3], NULL,&senseloop_light, NULL)!=0) {
+  if (pthread_create(&tids[3], NULL,&senseloop_temp, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return 1;
+  }
+  if (pthread_create(&tids[4], NULL,&senseloop_light, NULL)!=0) {
     printf("Failed to start activity thread\n");
     return 1;
   }
   // joining all the threaded activities
   size_t i;
-  for (i = 0; i < 4; i++) {
+  for (i = 0; i < 5; i++) {
     pthread_join(tids[i], NULL);
   }
   // flushing the lock here

@@ -166,10 +166,14 @@ float ads115_read_channel(int slaveaddr, int channel, PGA gain, DTRATE dr,int* o
   uint8_t config[3], a1Config[3];
   float volts =0.00;
   channel = channel+ 4; //to offset the 4 comparator channels at the beginning
+  /*mux =4 A0 <> GND*/
+  /*mux =5 A1 <> GND*/
+  /*mux =6 A2 <> GND*/
+  /*mux =7 A3 <> GND*/
   config[0]=1; // since we would want to point to the config register
   config[1]=0b00000000;//MSB of the configuration register, it default without any value.
   config[1]=config[1] | 1 << 7; // OS starting single shot conversion mode
-  config[1] = config[1] |channel<<4;
+  config[1] = config[1] |channel<<3;
   config[1] = config[1] | gain << 1; //the pga in the byte is 11:9
   config[1] = config[1] | 1; //this is to set the mode to single shot power down
   config[2]=0b10000011; //LSB of the configuration register

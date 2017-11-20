@@ -24,14 +24,15 @@ void* mq7_loop(void* arg){
   int gpio =13 ; //this is the pin at which voltage control is attached
   int ok =0;
   int channel =3;
+  int npn_invert =1;
   for (i = 0; i < 20; i++) {
-    heater_full_power(gpio);
+    heater_full_power(gpio, npn_invert);
     usleep(60*TOMICROSECS);
-    heater_power(0.28, gpio); // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
+    heater_power(0.28, gpio,npn_invert); // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V - and remember the npn is now a invertor
     usleep(90*TOMICROSECS);
-    heater_full_power(gpio);
+    // heater_full_power(gpio,npn_invert);
     mq7result result =ppm_co(&ok ,channel); //this is where you get the reading from sensor
-    heater_off(gpio);
+    heater_off(gpio,npn_invert);
     pthread_mutex_lock(&lock);
     myconditions.co_ppm=  result.co_ppm;
     myconditions.co_volts=result.volts;
@@ -43,6 +44,7 @@ void* mq7_loop(void* arg){
   }
   printf("The sensing loop has now maxed out , we are exiting\n");
 }
+
 void* display_loop(void* arg){
   char disp[100]="Sensor priming.."; //there is  a problem when we declare this as char*
   setup_lcd_4bitmode(2,16,RS,E,D0,D1,D2,D3);
