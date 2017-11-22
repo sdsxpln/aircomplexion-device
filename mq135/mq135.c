@@ -7,7 +7,7 @@
 @adschannel :the channel where the mq135 is actually attached.
 @fcalibrate :this would enforce priming the device all over again, Ro value would be recalibrated
 */
-int ppm_co2(int adschn, int fcalibrate, float* ppm){
+int ppm_co2(int adschn, int fcalibrate, mq135Result* result){
   static float Ro =-1.00; //this is the indicator if negative then the device has not been calibrated
   /*ratioRsRo     : ratio of sensor resistance in actual v/s ratio of sensor resistance in free air
   Vrl             : Voltage across the load resistance
@@ -43,9 +43,12 @@ int ppm_co2(int adschn, int fcalibrate, float* ppm){
     return -1;
   }
   if(Vrl ==0){perror("mq135.c: failed to read output of sensor"); return -1;}
+  result ->volts  = Vrl;
   Rs=(VDD * LOAD_RESISTANCE_KOHMS/Vrl)- LOAD_RESISTANCE_KOHMS;
+  result->sensorKohms =Rs;
   if (Ro >0) {
-    *ppm = pow(10,((log10(Rs/Ro)-CO2_Y_INTERCEPT)/CO2_SLOPE));
+    float ppm = pow(10,((log10(Rs/Ro)-CO2_Y_INTERCEPT)/CO2_SLOPE));
+    result->ppmCo2=ppm;
     return 0; // final value of the co2 content in part per million
   }
   else{perror("mq135.c :The sensor has not been primed"); return -1;}

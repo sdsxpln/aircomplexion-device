@@ -7,5 +7,13 @@
 #define LOAD_RESISTANCE_KOHMS 2.5
 #define CO2_PPM_NOW 402.73 // refer https://www.co2.earth/
 #define VDD 5.00 //this is assumed that we are connecting the sensor to this much of volts
-int ppm_co2(int adschn, int fcalibrate, float* ppm);
+// This structure signifies the result from each of reading.
+// use this to send out results
+typedef struct {
+  float sensorKohms;
+  float ppmCo2;
+  float volts;
+}mq135Result;
+int ppm_co2(int adschn, int fcalibrate, mq135Result* result);
+
 #endif

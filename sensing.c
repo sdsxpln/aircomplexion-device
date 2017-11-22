@@ -31,6 +31,14 @@ run           : ./bin/sensing.c
 #define RED_GPIO 16
 #define BLUE_GPIO 20
 #define BUZZ_GPIO 21
+#define LCD_ROWS 2
+#define LCD_COLS 16
+#define LCD_RS 17
+#define LCD_E 27
+#define LCD_D0 18
+#define LCD_D1 23
+#define LCD_D2 24
+#define LCD_D3 25
 
 void* ldr_loop(void* argc); //light sensing loop
 void* display_loop(void* argc); //light sensing loop
@@ -104,9 +112,17 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 void* co2_loop(void* argc){
-  printf("We are now starting the co2 loop\n");
+  setup_alert(BLUE_GPIO,RED_GPIO,BUZZ_GPIO);
+  // printf("We are now starting the co2 loop\n");
+  mq135Result result;
   while (1) {
-    usleep(4*SECSTOMICROSECS);
+    pthread_mutex_lock(&lock);
+    if(ppm_co2(MQ135_CHANNEL,0,&result)!=0){
+      perror("sensing: failed to measure co2 content");
+    }
+    ambientnow.co2_ppm=result.ppmCo2;
+    pthread_mutex_unlock(&lock);
+    usleep(2*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
   }
 }
 void* alert_loop(void* argc){
@@ -136,14 +152,11 @@ void* temp_loop(void* argc){
 }
 void* display_loop(void* argc){
   char message[80];
-  setup_lcd_4bitmode(2, 16, 17,27,18,23,24,25);
+  setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3);
   while (1) {
     pthread_mutex_lock(&lock);
-    display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,0,0);
-    // sprintf(message, "L:%.1f%% T:%.1f", , );
+    display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,0);
     pthread_mutex_unlock(&lock);
-    // lcd_clear();
-    // lcd_message(message);
     usleep(4*SECSTOMICROSECS); //refresh the display every 1 second
   }
   lcd_clear();
