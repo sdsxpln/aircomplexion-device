@@ -6,6 +6,6 @@
 echo "opening code files in atom, please keep atom remote server running .."
 ratom device.c
 # ratom device-service.c
-rtaom ./mq7/*
+rtaom ./mq7/mq7.*
 ratom testing.c
 ratom build.sh

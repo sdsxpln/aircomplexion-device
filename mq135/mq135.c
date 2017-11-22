@@ -7,7 +7,7 @@
 @adschannel :the channel where the mq135 is actually attached.
 @fcalibrate :this would enforce priming the device all over again, Ro value would be recalibrated
 */
-float ppm_co2(int* ok, int adschn, int fcalibrate){
+int ppm_co2(int adschn, int fcalibrate, float* ppm){
   static float Ro =-1.00; //this is the indicator if negative then the device has not been calibrated
   /*ratioRsRo     : ratio of sensor resistance in actual v/s ratio of sensor resistance in free air
   Vrl             : Voltage across the load resistance
@@ -21,8 +21,11 @@ float ppm_co2(int* ok, int adschn, int fcalibrate){
     ratioRsRo=pow(10,((CO2_SLOPE*(log10(CO2_PPM_NOW))+CO2_Y_INTERCEPT)));
     /*Voltage across the load resistance can be measured using the ADS - is the voltage output from the sensor
     observe the gain we are setting to : +-2.048 */
-    Vrl=ads115_read_channel(0x48,adschn, GAIN_TWO, DR_128,ok);
-    if(*ok!=0 || Vrl ==0){perror("mq135.c:failed priming of the sensor"); return 0;}
+    if(ads115_read_channel(0x48,adschn, GAIN_TWO, DR_128,&Vrl)!=0){
+      perror("mq135: error reading the ads channel");
+      return -1;
+    }
+    if(Vrl ==0){perror("mq135.c:failed priming of the sensor"); return -1;}
     /*please read carefully this is where I dont remember how the calculations are made
     Rt = Rs + Rl .. just the total resistance
     Rs = Rt-Rl
@@ -35,13 +38,15 @@ float ppm_co2(int* ok, int adschn, int fcalibrate){
     Ro=Rs/ratioRsRo;//resistance of sensor at clean air conditions
   }
   // from here on we have the regular ppm calculations
-  Vrl=ads115_read_channel(0x48,adschn, GAIN_TWO, DR_128,ok); //measuring voltage ouput
-  if(*ok!=0 || Vrl ==0){perror("mq135.c: failed to read output of sensor"); return 0;}
+  if(ads115_read_channel(0x48,adschn, GAIN_TWO, DR_128,&Vrl)!=0){
+    perror("mq135: error reading the ads channel");
+    return -1;
+  }
+  if(Vrl ==0){perror("mq135.c: failed to read output of sensor"); return -1;}
   Rs=(VDD * LOAD_RESISTANCE_KOHMS/Vrl)- LOAD_RESISTANCE_KOHMS;
   if (Ro >0) {
-    float ppm = pow(10,((log10(Rs/Ro)-CO2_Y_INTERCEPT)/CO2_SLOPE));
-    *ok=0;
-    return ppm; // final value of the co2 content in part per million
+    *ppm = pow(10,((log10(Rs/Ro)-CO2_Y_INTERCEPT)/CO2_SLOPE));
+    return 0; // final value of the co2 content in part per million
   }
-  else{perror("mq135.c :The sensor has not been primed"); *ok=-1; return 0;}
+  else{perror("mq135.c :The sensor has not been primed"); return -1;}
 }

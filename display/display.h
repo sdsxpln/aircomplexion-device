@@ -13,11 +13,11 @@ We would prefer this to happen in the 4 bit mode
 @rs         :is the RS pin on the displayed
 @e          :Is the strobe(E) pin on lcd displaty
 */
-void  setup_lcd_4bitmode(int rows, int cols, int rs, int e,
+int setup_lcd_4bitmode(int rows, int cols, int rs, int e,
         int d0, int d1, int d2, int d3);
 void  setup_lcd_8bitmode(int rows, int cols, int rs, int e,
                 int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7);
-void display_readings(float temp, float light, float co2);
+void display_readings(float temp, float light, float co2, float co);
 void lcd_clear();
 void lcd_message(char* msg);
 #endif

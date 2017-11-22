@@ -43,3 +43,8 @@ void alert(int* ok, int level, int muted){
     digitalWrite(buzz, LOW);
   }
 }
+void clear_all_alerts(){
+  digitalWrite(bLED, LOW);
+  digitalWrite(rLED, LOW);
+  digitalWrite(buzz, LOW);
+}

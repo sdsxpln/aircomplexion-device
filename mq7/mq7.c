@@ -34,7 +34,7 @@ void heater_power(float powerpercent , int gpio, int npn_invert){
 mq7result ppm_co(int* ok ,int channel){
   *ok =0;
   mq7result result;
-  float voltage= ads115_read_channel(ADS_SLAVE_ADDR, channel, GAIN_FOUR, DR_128, ok);
+  float voltage= ads115_read_channel(ADS_SLAVE_ADDR, channel, GAIN_TWO, DR_128, ok);
   /*from the extracted voltage we need to then calculate the resistance at the sensor knowing the load resistance
   We are aware that the load and sensor resistance are in series and hence using the Kirchoffs voltage law.
   The 2 resistors form a voltage divider circuit*/

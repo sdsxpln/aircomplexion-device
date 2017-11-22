@@ -5,4 +5,5 @@
 typedef enum {LOW=0, MEDIUM=1, HIGH=2}ALERTLVL; //this defines how severe is the alert
 void setup_alert(int bluegpio, int redgpio, int buzzgpio); //this would just setup the alerting gpio.
 void alert(int* ok, int level, int muted);
+void clear_all_alerts();
 #endif

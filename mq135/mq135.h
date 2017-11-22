@@ -7,5 +7,5 @@
 #define LOAD_RESISTANCE_KOHMS 2.5
 #define CO2_PPM_NOW 402.73 // refer https://www.co2.earth/
 #define VDD 5.00 //this is assumed that we are connecting the sensor to this much of volts
-float ppm_co2(int* ok, int adschn, int fcalibrate);
+int ppm_co2(int adschn, int fcalibrate, float* ppm);
 #endif

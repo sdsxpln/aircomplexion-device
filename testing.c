@@ -30,16 +30,16 @@ void* mq7_loop(void* arg){
     usleep(60*TOMICROSECS);
     heater_power(0.28, gpio,npn_invert); // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V - and remember the npn is now a invertor
     usleep(90*TOMICROSECS);
-    // heater_full_power(gpio,npn_invert);
+    heater_full_power(gpio,npn_invert);
     mq7result result =ppm_co(&ok ,channel); //this is where you get the reading from sensor
-    heater_off(gpio,npn_invert);
     pthread_mutex_lock(&lock);
     myconditions.co_ppm=  result.co_ppm;
     myconditions.co_volts=result.volts;
     myconditions.co_kohms=result.sensor_kohms;
     // We also attempt to read from the shared structure
-    printf("%.2f\t\t%.2f\t\t%.2f\n", myconditions.co_volts, myconditions.co_kohms, myconditions.co_ppm);
+    printf("volts : %.2f\nsensor resistance: %.2f\nco ppm: %.2f\n", myconditions.co_volts, myconditions.co_kohms, myconditions.co_ppm);
     pthread_mutex_unlock(&lock);
+    heater_off(gpio,npn_invert);
     usleep(3*TOMICROSECS);
   }
   printf("The sensing loop has now maxed out , we are exiting\n");
