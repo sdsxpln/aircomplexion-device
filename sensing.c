@@ -139,7 +139,7 @@ void* display_loop(void* argc){
   setup_lcd_4bitmode(2, 16, 17,27,18,23,24,25);
   while (1) {
     pthread_mutex_lock(&lock);
-    sprintf(message, "L:%.2f T:%.2f", ambientnow.light_cent, ambientnow.temp_celcius);
+    sprintf(message, "L:%.2f%% T:%.2f", ambientnow.light_cent*100, ambientnow.temp_celcius);
     pthread_mutex_unlock(&lock);
     lcd_clear();
     lcd_message(message);
