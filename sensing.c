@@ -139,10 +139,11 @@ void* display_loop(void* argc){
   setup_lcd_4bitmode(2, 16, 17,27,18,23,24,25);
   while (1) {
     pthread_mutex_lock(&lock);
-    sprintf(message, "L:%.2f%% T:%.2f", ambientnow.light_cent*100, ambientnow.temp_celcius);
+    display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,0,0);
+    // sprintf(message, "L:%.1f%% T:%.1f", , );
     pthread_mutex_unlock(&lock);
-    lcd_clear();
-    lcd_message(message);
+    // lcd_clear();
+    // lcd_message(message);
     usleep(4*SECSTOMICROSECS); //refresh the display every 1 second
   }
   lcd_clear();
