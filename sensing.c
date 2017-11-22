@@ -39,6 +39,8 @@ run           : ./bin/sensing.c
 #define LCD_D1 23
 #define LCD_D2 24
 #define LCD_D3 25
+#define Co2_LVL_WARN 700 //ppm level at which warning message should be sounded
+#define Co2_LVL_ALARM 1500 //level at which it is fatal and should ring in the alarm
 
 void* ldr_loop(void* argc); //light sensing loop
 void* display_loop(void* argc); //light sensing loop
@@ -113,16 +115,23 @@ int main(int argc, char const *argv[]) {
 }
 void* co2_loop(void* argc){
   setup_alert(BLUE_GPIO,RED_GPIO,BUZZ_GPIO);
-  // printf("We are now starting the co2 loop\n");
   mq135Result result;
+  int ok =0;
   while (1) {
     pthread_mutex_lock(&lock);
     if(ppm_co2(MQ135_CHANNEL,0,&result)!=0){
       perror("sensing: failed to measure co2 content");
     }
     ambientnow.co2_ppm=result.ppmCo2;
+    if (ambientnow.co2_ppm < Co2_LVL_WARN) {
+      alert(&ok,0,0);
+    }
+    else if (ambientnow.co2_ppm >= Co2_LVL_WARN && ambientnow.co2_ppm < Co2_LVL_ALARM){
+      alert(&ok,1,0);
+    }
+    else {alert(&ok,2,0);}
     pthread_mutex_unlock(&lock);
-    usleep(2*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
+    usleep(5*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
   }
 }
 void* alert_loop(void* argc){
@@ -147,7 +156,7 @@ void* temp_loop(void* argc){
     }
     ambientnow.temp_celcius = result.temp;
     pthread_mutex_unlock(&lock);
-    usleep(4*SECSTOMICROSECS);
+    usleep(10*SECSTOMICROSECS);
   }
 }
 void* display_loop(void* argc){
@@ -157,7 +166,7 @@ void* display_loop(void* argc){
     pthread_mutex_lock(&lock);
     display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,0);
     pthread_mutex_unlock(&lock);
-    usleep(4*SECSTOMICROSECS); //refresh the display every 1 second
+    usleep(2*SECSTOMICROSECS); //refresh the display every 2 second
   }
   lcd_clear();
 }
@@ -171,6 +180,6 @@ void* ldr_loop(void* argc){
     }
     ambientnow.light_cent = result.light;
     pthread_mutex_unlock(&lock);
-    usleep(4*SECSTOMICROSECS);
+    usleep(5*SECSTOMICROSECS);
   }
 }
