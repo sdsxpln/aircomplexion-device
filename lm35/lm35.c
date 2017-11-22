@@ -7,7 +7,7 @@ int airtemp_now(int adschn, TEMPUNITS unit, lm35Result* result){
   if (ads115_read_channel(0x48,2,GAIN_TWO,DR_128, &volts)!=0) {
     perror("Error reading a single channel");
   }
-  printf("From inside lm35 : %.3f\n", volts);
+  // printf("From inside lm35 : %.3f\n", volts);
   result ->volts = volts;
   result ->temp  = volts*100;
   return 0;

@@ -47,7 +47,7 @@ ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; /
 pthread_t tids[4];
 pthread_mutex_t lock;
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
-int main(int argc, char const *argv[]) {
+int main_test(int argc, char const *argv[]) {
   float readings[4];
   while (1) {
     if (ads115_read_all_channels(0x48,readings)!=0) {
@@ -68,7 +68,7 @@ int main(int argc, char const *argv[]) {
   }
   return 0;
 }
-int main_arc(int argc, char const *argv[]) {
+int main(int argc, char const *argv[]) {
   int ok =0;
   wiringPiSetupGpio();
   // instantiating the lock here
@@ -124,10 +124,10 @@ void* alert_loop(void* argc){
 void* temp_loop(void* argc){
   lm35Result result;
   while (1) {
+    pthread_mutex_lock(&lock);
     if(airtemp_now(LM35_CHANNEL,CELCIUS, &result)!=0){
       perror("Error reading the temperature..");
     }
-    pthread_mutex_lock(&lock);
     ambientnow.temp_celcius = result.temp;
     pthread_mutex_unlock(&lock);
     usleep(4*SECSTOMICROSECS);
@@ -149,11 +149,11 @@ void* display_loop(void* argc){
 void* ldr_loop(void* argc){
   ldrResult result;
   while (1) {
+    // printf("%.3f\n",result.volts);
+    pthread_mutex_lock(&lock);
     if (light_percent(LDR_CHANNEL, BRIGHT_VOLTS ,DARK_VOLTS,&result)!=0){
       perror("ldr loop: error reading the light conditions");
     }
-    // printf("%.3f\n",result.volts);
-    pthread_mutex_lock(&lock);
     ambientnow.light_cent = result.light;
     pthread_mutex_unlock(&lock);
     usleep(4*SECSTOMICROSECS);

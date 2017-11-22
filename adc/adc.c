@@ -173,7 +173,7 @@ int ads115_read_channel(int slaveaddr, int channel, PGA gain, DTRATE dr,float* r
   config[1]=config[1] | 1 << 7; // OS starting single shot conversion mode
   /*I have wasted almost about 24hrs trying to fix this , never change the bit shift positions!
   4 bits to the left is for the channel has been carefully calculated and changing this would mean disaster
-  Whats more painful is that detecting that this  small issue causes reading change takes more time than expected.*/ 
+  Whats more painful is that detecting that this  small issue causes reading change takes more time than expected.*/
   config[1] = config[1] |channel<<4;
   config[1] = config[1] | gain << 1; //the pga in the byte is 11:9
   config[1] = config[1] | 1; //this is to set the mode to single shot power down
@@ -183,6 +183,6 @@ int ads115_read_channel(int slaveaddr, int channel, PGA gain, DTRATE dr,float* r
   if(read_device(config, slaveaddr,gain,dr,reading)!=0){
     return -1;
   };
-  printf("From inside ADS : %.3f\n", *reading);
+  // printf("From inside ADS : %.3f\n", *reading);
   return 0;
 }
