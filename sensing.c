@@ -21,8 +21,9 @@ run           : ./bin/sensing.c
 #include "./adc/adc.h"
 // #include "./mq7/mq7.h"
 
-#define DARK_VOLTS 0.806
-#define BRIGHT_VOLTS 2.013
+#define DARK_VOLTS 0.7899
+#define BRIGHT_VOLTS 2.2559
+/*light measuring voltage is observed on 22 NOV 2017 on a bright sunny morning with ample light in the laboratory*/
 #define SECSTOMICROSECS 1000000
 #define LDR_CHANNEL 3
 #define LM35_CHANNEL 2
