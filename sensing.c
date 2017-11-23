@@ -63,7 +63,7 @@ ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; /
 pthread_t tids[4];
 pthread_mutex_t lock;
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
-int main(int argc, char const *argv[]) {
+int main_test(int argc, char const *argv[]) {
   // co_loop(NULL);
   // float readings[4];
   // while (1) {
@@ -85,18 +85,18 @@ int main(int argc, char const *argv[]) {
   //   sleep(2);
   // }
   wiringPiSetupGpio();
-  pinMode(MQ7_HEATER_GPIO, PWM_OUTPUT);
-  printf("Pinmode set..\n");
-  pwmSetMode(PWM_MODE_MS);
-  printf("Pwm mode set \n");
-  pwmSetRange(128);
-  pwmSetClock(15);
-  printf("Range and the clock has been set\n");
-  pwmWrite(MQ7_HEATER_GPIO,(0.72*128));
-  printf("Pwm signal started\n");
+  int npn_invert =1;
+  heater_full_power(MQ7_HEATER_GPIO,npn_invert );
+  printf("Heater started in full power mode..\n");
+  sleep(5);
+  heater_power(0.10,MQ7_HEATER_GPIO,npn_invert);
+  printf("Heater now in partial power mode..\n");
+  sleep(30);
+  printf("Heater now being turned off\n");
+  heater_off(MQ7_HEATER_GPIO, npn_invert);
   return 0;
 }
-int main_test(int argc, char const *argv[]) {
+int main(int argc, char const *argv[]) {
   int ok =0;
   wiringPiSetupGpio();
   // instantiating the lock here
@@ -120,10 +120,10 @@ int main_test(int argc, char const *argv[]) {
     printf("Failed to start activity thread\n");
     return 1;
   }
-  // if (pthread_create(&tids[4], NULL,&co_loop, NULL)!=0) {
-  //   printf("Failed to start activity thread\n");
-  //   return 1;
-  // }
+  if (pthread_create(&tids[4], NULL,&co_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return 1;
+  }
   size_t i;
   int array_sz = sizeof(tids)/sizeof(pthread_t);
   for (i = 0; i < array_sz; i++) {
@@ -138,21 +138,18 @@ void* co_loop(void* argc){
   int npn_invert = 1;
   mq7result result;
   while (1) {
-    printf("Turning on the heater\n");
     heater_full_power(MQ7_HEATER_GPIO,npn_invert);//full power heater for 60 secs
     usleep(60*SECSTOMICROSECS);
     // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
     // partial power heater for 90 secs
-    printf("Turning the heater on for partial power\n");
-    heater_power(0.28, MQ7_HEATER_GPIO, npn_invert);
+    heater_power(0.10, MQ7_HEATER_GPIO, npn_invert);
     usleep(90*SECSTOMICROSECS);
-    printf("Now ready to measure CO\n");
     pthread_mutex_lock(&lock);
     if (ppm_co(MQ7_CHANNEL, &result)!=0){
       perror("sensing/co_loop: failed to read co content");
     }
     ambientnow.co_ppm=result.co_ppm; //psuhing to a shared structure
-    printf("CO : %.2f\n", result.co_ppm);
+    // printf("CO : %.2f\n", result.co_ppm);
     pthread_mutex_unlock(&lock);
     heater_full_power(MQ7_HEATER_GPIO, npn_invert);
     // sleep only for 2 seconds before the next reading
@@ -197,7 +194,7 @@ void* display_loop(void* argc){
   setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3);
   while (1) {
     pthread_mutex_lock(&lock);
-    display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,0);
+    display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,ambientnow.co_ppm);
     pthread_mutex_unlock(&lock);
     usleep(2*SECSTOMICROSECS); //refresh the display every 2 second
   }
