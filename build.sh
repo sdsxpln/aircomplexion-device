@@ -11,7 +11,7 @@ gcc -c ./display/display.c -I./display -o./bin/display.o
 gcc -c ./lm35/lm35.c -I./lm35 -o./bin/lm35.o
 gcc -c ./alerts/alerts.c -I./alerts -o./bin/alerts.o
 gcc -c ./mq135/mq135.c -I./mq135 -o./bin/mq135.o
-# gcc -c ./mq7/mq7.c -I./mq7 -o./bin/mq7.o
+gcc -c ./mq7/mq7.c -I./mq7 -o./bin/mq7.o
 # this then compresses into a single library that can be archived
 ar crv ./bin/libsensing.a \
 ./bin/adc.o \
@@ -20,11 +20,11 @@ ar crv ./bin/libsensing.a \
 ./bin/lm35.o \
 ./bin/alerts.o \
 ./bin/mq135.o \
-# ./bin/mq7.o
+./bin/mq7.o
 ranlib ./bin/libsensing.a
 #this is where we make that into a running program
 gcc ./sensing.c -o./bin/sensing -lm -lwiringPi -lwiringPiDev -lpthread -L./bin -lsensing
-./bin/sensing
+sudo ./bin/sensing
 # gcc ./upstart/upstart.c -o ./bin/upstart -lwiringPi
 # sudo cp ./upstart/co2sense.service /etc/systemd/system/co2sense.service
 #sudo systemctl disable co2sense.service
