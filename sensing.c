@@ -51,7 +51,7 @@ void* temp_loop(void* argc);
 void* alert_loop(void* argc);
 void* co2_loop(void* argc);
 void* co_loop(void* argc);
-
+void* sig_response(void* argc); //this one responds to the incoming system signals
 typedef struct {
   float co2_ppm;
   float temp_celcius;
@@ -60,8 +60,9 @@ typedef struct {
   char err[128];
 }ambience; //this structure represents the conditions collectively that are thread safe
 ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; //presetting the values in the structure
-pthread_t tids[4];
+pthread_t tids[6];
 pthread_mutex_t lock;
+static sigset_t   signal_mask;  /* signals to block         */
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
 int main_test(int argc, char const *argv[]) {
   // co_loop(NULL);
@@ -100,41 +101,83 @@ int main(int argc, char const *argv[]) {
   int ok =0;
   wiringPiSetupGpio();
   // instantiating the lock here
+  sigemptyset (&signal_mask);
+  sigaddset (&signal_mask, SIGINT);
+  sigaddset (&signal_mask, SIGTERM);
+  /*We dont want any of the threads including this one to handle any of the terminal signals
+  We woudl want only one thread only to handle the system signals*/
+  if(pthread_sigmask (SIG_BLOCK, &signal_mask, NULL)!=0){
+    perror("sensing/main:failed to set signal block configuration");
+    exit(EXIT_FAILURE);
+  }
+  /* any newly created threads inherit the signal mask */
   if (pthread_mutex_init(&lock, NULL)!=0) {
     printf("Error starting a new thread, exiting application\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (pthread_create(&tids[0], NULL,&ldr_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (pthread_create(&tids[1], NULL,&display_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (pthread_create(&tids[2], NULL,&temp_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (pthread_create(&tids[3], NULL,&co2_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
   if (pthread_create(&tids[4], NULL,&co_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
-    return 1;
+    exit(EXIT_FAILURE);
+  }
+  if (pthread_create(&tids[5], NULL,&sig_response, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    exit(EXIT_FAILURE);
   }
   size_t i;
   int array_sz = sizeof(tids)/sizeof(pthread_t);
   for (i = 0; i < array_sz; i++) {
     pthread_join(tids[i], NULL);
   }
-  return 0;
   // flushing the lock here
   pthread_mutex_destroy(&lock);
-  return 0;
+  exit(EXIT_SUCCESS);
+}
+void* sig_response(void* argc){
+  int sig_caught;    /* signal caught       */
+  if(sigwait (&signal_mask, &sig_caught)!=0){
+    perror("sensing/main: error setting up the signal listeners");
+  }
+  size_t i;
+  int array_sz = sizeof(tids)/sizeof(pthread_t);
+  switch (sig_caught) {
+    case SIGINT:
+      printf("SIGINT received\n");
+      // kill all the threads and initiate shutdown
+      // we have to cancel all the threads except this one
+      for (i = 0; i < array_sz-1; i++) {
+        pthread_cancel(tids[i]);
+      }
+      break;
+    case SIGTERM:
+      printf("SIGTERM received\n");
+      break;
+    default:
+      printf("Caught the signal but not the one expected\n");
+  }
+  printf("Signal response thread going down..\n");
+  // from here on we shoudl expect the main thread to do job of closing all threads
 }
 void* co_loop(void* argc){
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ co_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
   int npn_invert = 1;
   mq7result result;
   while (1) {
@@ -155,8 +198,14 @@ void* co_loop(void* argc){
     // sleep only for 2 seconds before the next reading
     usleep(2*SECSTOMICROSECS);
   }
+  printf("CO loop now exiting\n");
+  pthread_exit(0);
 }
 void* co2_loop(void* argc){
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ co_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
   setup_alert(BLUE_GPIO,RED_GPIO,BUZZ_GPIO);
   mq135Result result;
   int ok =0;
@@ -176,8 +225,14 @@ void* co2_loop(void* argc){
     pthread_mutex_unlock(&lock);
     usleep(5*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
   }
+  printf("Co2 loop now exiting..\n");
+  pthread_exit(0);
 }
 void* temp_loop(void* argc){
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ co_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
   lm35Result result;
   while (1) {
     pthread_mutex_lock(&lock);
@@ -188,8 +243,14 @@ void* temp_loop(void* argc){
     pthread_mutex_unlock(&lock);
     usleep(10*SECSTOMICROSECS);
   }
+  printf("Temp loop is now exiting\n");
+  pthread_exit(0);
 }
 void* display_loop(void* argc){
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ co_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
   char message[80];
   setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3);
   while (1) {
@@ -199,8 +260,14 @@ void* display_loop(void* argc){
     usleep(2*SECSTOMICROSECS); //refresh the display every 2 second
   }
   lcd_clear();
+  printf("Display loop is now quitting\n");
+  pthread_exit(0);
 }
 void* ldr_loop(void* argc){
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ co_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
   ldrResult result;
   while (1) {
     // printf("%.3f\n",result.volts);
@@ -212,4 +279,6 @@ void* ldr_loop(void* argc){
     pthread_mutex_unlock(&lock);
     usleep(5*SECSTOMICROSECS);
   }
+  printf("LDR loop now clearing ..\n");
+  pthread_exit(0);
 }

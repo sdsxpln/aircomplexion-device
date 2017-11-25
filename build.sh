@@ -24,9 +24,9 @@ ar crv ./bin/libsensing.a \
 ranlib ./bin/libsensing.a
 #this is where we make that into a running program
 gcc ./sensing.c -o./bin/sensing -lm -lwiringPi -lwiringPiDev -lpthread -L./bin -lsensing
-# sudo ./bin/sensing
-gcc ./upstart/upstart.c -o./bin/upstart -lwiringPi
-sudo ./bin/upstart
+sudo ./bin/sensing
+# gcc ./upstart/upstart.c -o./bin/upstart -lwiringPi
+# sudo ./bin/upstart
 # sudo cp ./upstart/co2sense.service /etc/systemd/system/co2sense.service
 # sudo systemctl disable co2sense.service
 # sudo systemctl enable co2sense.service
