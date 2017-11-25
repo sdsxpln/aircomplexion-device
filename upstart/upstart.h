@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#define RESTART_GPIO 20
-#define SHUTD_GPIO 21
+#define RESTART_GPIO 5
+#define SHUTD_GPIO 6
 #define DEBOUNCE 200
 #endif

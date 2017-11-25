@@ -8,7 +8,7 @@
 /*We currently dont have any basis to experimentally prove that the resistance of the sensor in clean air would be this.
 From various internet sources we have observed that in a room (as mine right now) we get almost about 0.9 ppm of C0.
 This also is in agreement with citations saying that normal healthy rooms have between 0.5 to 5 ppm of CO */
-#define SENSOR_KOHM_CLEAN 0.5 //this is Ro - the sensor resistance is clean air at 20 deg, 33RH
+#define SENSOR_KOHM_CLEAN 0.2633 //this is Ro - the sensor resistance is clean air at 20 deg, 33RH
 /*from the characteristic graph that we have in the datasheet we can know that the relation in focus is a logarithmic equation
 log10(Rs/Ro) = mlog10(ppm)+c
 m : slope of the curve
@@ -44,5 +44,5 @@ void heater_off(int gpio, int npn_invert);
 int ppm_co(int channel, mq7result* result);
 void mq7_shutdown(int gpio,int npn_invert);
 /*this enables us to get the Rs/Ro ratio , or in effect the resistance of the sensor when in clean air 20 deg 33%RH*/
-float calibrate(int* ok, float ppmco);
+int calibrate(int adschn, float ppmco, float* ro);
 #endif

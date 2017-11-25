@@ -56,6 +56,30 @@ int ppm_co(int channel, mq7result* result){
 void mq7_shutdown(int gpio, int npn_invert){
   heater_off(gpio,npn_invert);
 }
-float calibrate(int* ok, float ppmco){
-  return 0.0;
+/*this method is used to recalibrate the sensor hardware
+One would have to run the sensor in an environment with known CO content.
+This environment with the known CO content then can help us back calc the Ro when we get the sensor resistance from thevoltage OUTPUT
+ppmco       : this is co content in the known environment
+Ro          : this is the output . sensor resistance in 20 deg c and 33% RH
+adschn      : channel at which the ads should be read
+here we are assuming the other graph params are ok - they are observed on the datasheet and obviously any error in reading them would be detrimental to the output here.
+ */
+int calibrate(int adschn, float ppmco, float* ro){
+  float log_rs_ro = (SLOPE_CHAR_CURVE*log10(ppmco))+CHAR_CURVE_CONST;
+  float rs_ro = powf(10.00, log_rs_ro);
+  float vrl;
+  float vcc  = 5.00;
+  // now getting the reading from teh ads channel so that we have the sensor resistance
+  if (ads115_read_channel(ADS_SLAVE_ADDR, adschn, GAIN_TWO, DR_128, &vrl)!=0) {
+    perror("mq7/calibrate:failed to read the ads channel for the voltage");
+    return -1; //unable to read the ads channel would mean we would have to abandon the calibration
+  }
+  printf("Volatge recorded was %.3f\n",vrl );
+  float rs = ((vcc- vrl)*LOAD_RESIS_KOHM)/vrl;
+  if (rs_ro<=0) {
+    perror("mq7/calibrate: Invalid value for sensor resistance ratio, check the environement for excessive co content");
+    return -1;
+  }
+  *ro  = rs/rs_ro;
+  return 0;
 }

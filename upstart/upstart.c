@@ -47,9 +47,9 @@ void startloop_wait(){
   if (pid==0) {
     static char *argv[]={};
     /*execv would replace the child process with the running sensing loop*/
-    if ((execv("../bin/device",argv))==-1) {
+    if ((execv("../bin/sensing",argv))==-1) {
       /* incase its a service then it would not work from the relative directory*/
-      if ((execv("/home/pi/src/co2sensing/bin/device",argv))==-1){
+      if ((execv("/home/pi/src/airnose-device/bin/sensing",argv))==-1){
         perror("Failed to start the looping process");
         exit(127);
       }
