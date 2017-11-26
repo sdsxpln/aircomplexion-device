@@ -80,6 +80,9 @@ int calibrate(int adschn, float ppmco, float* ro){
     perror("mq7/calibrate: Invalid value for sensor resistance ratio, check the environement for excessive co content");
     return -1;
   }
-  *ro  = rs/rs_ro;
+  *ro  =rs/rs_ro;
+  // result ->sensor_kohms = ro;
+  // result ->volts = vrl;
+  // result->co_ppm =ppmco; // this is calibration
   return 0;
 }

@@ -145,6 +145,7 @@ int main(int argc, char const *argv[]) {
     pthread_join(tids[i], NULL);
   }
   // flushing the lock here
+  printf("All the threads have returned ?\n");
   pthread_mutex_destroy(&lock);
   exit(EXIT_SUCCESS);
 }
@@ -157,15 +158,10 @@ void* sig_response(void* argc){
   int array_sz = sizeof(tids)/sizeof(pthread_t);
   switch (sig_caught) {
     case SIGINT:
-      printf("SIGINT received\n");
-      // kill all the threads and initiate shutdown
-      // we have to cancel all the threads except this one
+    case SIGTERM:
       for (i = 0; i < array_sz-1; i++) {
         pthread_cancel(tids[i]);
       }
-      break;
-    case SIGTERM:
-      printf("SIGTERM received\n");
       break;
     default:
       printf("Caught the signal but not the one expected\n");
