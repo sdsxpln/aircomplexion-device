@@ -145,7 +145,10 @@ int main(int argc, char const *argv[]) {
     pthread_join(tids[i], NULL);
   }
   // flushing the lock here
-  printf("All the threads have returned ?\n");
+  // we would have to do all the clearing operations here
+  lcd_clear();
+  mq7_shutdown(MQ7_HEATER_GPIO,1);
+  clear_all_alerts();
   pthread_mutex_destroy(&lock);
   exit(EXIT_SUCCESS);
 }
