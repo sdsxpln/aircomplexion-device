@@ -44,6 +44,9 @@ run           : ./bin/sensing.c
 #define LCD_D3 25
 #define Co2_LVL_WARN 700 //ppm level at which warning message should be sounded
 #define Co2_LVL_ALARM 1500 //level at which it is fatal and should ring in the alarm
+#define RESTART_GPIO 5
+#define SHUTD_GPIO 6
+#define DEBOUNCE 200
 // Threaded loop function definitions
 void* ldr_loop(void* argc);
 void* display_loop(void* argc);
@@ -52,6 +55,12 @@ void* alert_loop(void* argc);
 void* co2_loop(void* argc);
 void* co_loop(void* argc);
 void* sig_response(void* argc); //this one responds to the incoming system signals
+int setup_interrupts(void* on_restart, void* on_shutd); //this setups the interrupts from the buttons using wiringpi isr
+// interrupt handlers
+void onrestart_interrupt();
+void onshutd_interrupt();
+int spinup_loops();
+void breakdown_loops();
 typedef struct {
   float co2_ppm;
   float temp_celcius;
@@ -63,6 +72,7 @@ ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; /
 pthread_t tids[6];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
+int shutdown_sensing =0;
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
 int main_test(int argc, char const *argv[]) {
   // co_loop(NULL);
@@ -110,42 +120,19 @@ int main(int argc, char const *argv[]) {
     perror("sensing/main:failed to set signal block configuration");
     exit(EXIT_FAILURE);
   }
+  if (setup_interrupts(&onrestart_interrupt, &onshutd_interrupt)!=0){
+    perror("sensing.c/main :Failed to setup one or more button interrupts");
+    // the program from here still can continue
+  }
   /* any newly created threads inherit the signal mask */
   if (pthread_mutex_init(&lock, NULL)!=0) {
     printf("Error starting a new thread, exiting application\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[0], NULL,&ldr_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[1], NULL,&display_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[2], NULL,&temp_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[3], NULL,&co2_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[4], NULL,&co_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[5], NULL,&sig_response, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  size_t i;
-  int array_sz = sizeof(tids)/sizeof(pthread_t);
-  for (i = 0; i < array_sz; i++) {
-    pthread_join(tids[i], NULL);
-  }
-  // flushing the lock here
-  // we would have to do all the clearing operations here
+  do{
+    /*this would keep spinning up the sensing and displaying loops till the conditional variable is false*/
+    if(spinup_loops()!=0){exit(EXIT_FAILURE);}
+  }while(shutdown_sensing ==0);
   lcd_clear();
   mq7_shutdown(MQ7_HEATER_GPIO,1);
   clear_all_alerts();
@@ -280,4 +267,79 @@ void* ldr_loop(void* argc){
   }
   printf("LDR loop now clearing ..\n");
   pthread_exit(0);
+}
+/*This just sets up the interrupt handlers for given conditions of shutdown an restart
+on_restart      : function pointer to restart handler
+on_shutd        : function pointer to shutdown handler*/
+int setup_interrupts(void* on_restart, void* on_shutd){
+  // error handling in this function wip
+  wiringPiSetupGpio();
+  pinMode(RESTART_GPIO, INPUT);
+  pinMode(SHUTD_GPIO, INPUT);
+  pullUpDnControl(RESTART_GPIO, PUD_UP);
+  pullUpDnControl(SHUTD_GPIO, PUD_UP);
+  wiringPiISR(RESTART_GPIO,INT_EDGE_FALLING, on_restart);
+  wiringPiISR(SHUTD_GPIO,INT_EDGE_FALLING, on_shutd);
+  return 0;
+}
+void onrestart_interrupt(){
+  /*handler for the restart button interrupt*/
+  static unsigned long lastHit = 0;
+  unsigned long latestHit  = millis();
+  if(latestHit -lastHit > DEBOUNCE){
+    printf("We have received the restart interrupt\n");
+    shutdown_sensing =0;
+    breakdown_loops();
+  }
+  lastHit = latestHit;
+}
+void onshutd_interrupt(){
+  /*handler for the restart button interrupt*/
+  static unsigned long lastHit = 0;
+  unsigned long latestHit  = millis();
+  if(latestHit -lastHit > DEBOUNCE){
+    printf("We have received the shutdown interrupt\n");
+    shutdown_sensing =1;
+    breakdown_loops();
+  }
+  lastHit = latestHit;
+}
+int spinup_loops(){
+  if (pthread_create(&tids[0], NULL,&display_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return -1;
+  }
+  if (pthread_create(&tids[1], NULL,&ldr_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return -1;
+  }
+  if (pthread_create(&tids[2], NULL,&temp_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return -1;
+  }
+  if (pthread_create(&tids[3], NULL,&co2_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return -1;
+  }
+  if (pthread_create(&tids[4], NULL,&co_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return -1;
+  }
+  if (pthread_create(&tids[5], NULL,&sig_response, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    return -1;
+  }
+  size_t i;
+  int array_sz = sizeof(tids)/sizeof(pthread_t);
+  for (i = 0; i < array_sz; i++) {
+    pthread_join(tids[i], NULL);
+  }
+  return 0;
+}
+void breakdown_loops(){
+  size_t i;
+  int array_sz = sizeof(tids)/sizeof(pthread_t);
+  for (i = 0; i < array_sz; i++) {
+    pthread_cancel(tids[i]);
+  }
 }
