@@ -168,6 +168,7 @@ void* interrupt_watch(void* argc){
   switch (sig_caught) {
     case SIGINT:
     case SIGTERM:
+    case SIGKILL:
       for (i = 0; i < array_sz; i++) {
         pthread_cancel(tids[i]);
       }

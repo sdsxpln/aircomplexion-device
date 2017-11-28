@@ -62,5 +62,6 @@ void startloop_wait(){
 }
 void on_force_shutd(){
   loopRestart =0;
+  kill(pid, SIGTERM);
   system("sudo shutdown -h now");
 }
