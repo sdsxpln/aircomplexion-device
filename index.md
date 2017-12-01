@@ -9,11 +9,12 @@ Our product here has a sense of whats the current measure of the Co2, CO, So2, N
 
 - It can in general keep the masses aware of the low quality of the atmosphere, raising an alarm well before dire situations.
 - It then becomes easy to drive environmental messages across to all the sections of the society since we have our claims backed by solid historical data.
+- Observing co-relations if any between the change in the environmental conditions like Light / Temp to that of the gaseous composition of the ambient air.
 
 ## Coincident spikes in Co2 and dependants :
 ****
 
-Measuring Co2 over the time axis along with other parameters (time, light, humidity, temperature) can reveal coincident changes in the graphs and hence the possibility of an underlying mathematical relation.Our best chance is to observe the spykes in the trends  in temperature,  light, humidity to know if the gaseous pollutant content really changes with other influencers.
+Measuring Co2 over the time axis along with other parameters (time, light, humidity, temperature) can reveal coincident changes in the graphs and hence the possibility of an underlying mathematical relation.Our best chance is to observe the spikes in the trends  in temperature,  light, humidity to know if the gaseous pollutant content really changes with other influencers.
 
 Winter in the client's premises needs a close vigil of the movment of Co2/ CO content in parts per million (ppm). With the rising density we would have a intuitive rise in the Co2. Client needs to track other gaseous content as well.
 
@@ -32,6 +33,12 @@ Fog computing approach for holding data on the device is best advised when we ha
 Services running on the cloud are HTTP REST tuned. They continuously listen to the devices pings and supply the data as requested by the web applications. **Services as these are highly available and nimble** enough to deal with concurrent requests at the same time.
 
 **Service to Device channel works in the polling mode**. Devices can ping and request for data, but services would not be able to push notifications unless the devices are running on static IP addresses. In the current setup we would like to keep this channel open one way.
+
+
+## Open source software, plug and compile code on site :
+****
+
+The entire project has been built on open source. Everytime we have a new device being installed we just clone the repository and build it on site. Bleeding edge code is available at the device installation from the `master` branch on the repository.
 
 
 ## Device registration and identification :
