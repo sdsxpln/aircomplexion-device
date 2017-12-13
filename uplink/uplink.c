@@ -13,6 +13,29 @@ struct MemoryStruct {
   char *memory;
   size_t size;
 };
+typedef char* (*jsonify)(char*, char*);
+typedef struct structkeyvaluepair{
+  char* key;
+  char* strValue ;
+  jsonify Jsonify;
+}KeyValuePair;
+/*This defines the KeyValuePair of json values that needs to be read back into a
+json string before being sent across to the server. The client can now still put
+in values in a dictionary
+Want to know how to effectively define structures ?
+https://www.programiz.com/c-programming/c-structures
+Want to know how we can store function pointers in structures ?
+http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)FunctionPointers.html*/
+char* jsonify_strfield(char* key, char* value){
+    //this assumes the field value is char* type and thus converts the same
+    char* new_result= malloc(strlen(key)+strlen(value)+10); // initiating to a proper size
+    if(!new_result){
+      fprintf(stderr, "Out of memory , failed jsonification \n");
+      return "";
+    }
+    sprintf(new_result ,"\"%s\":\"%s\"",key, value); // printing on the variable
+    return new_result;
+  }
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp){
   size_t realsize = size * nmemb;
   struct MemoryStruct *mem = (struct MemoryStruct *)userp;
@@ -29,7 +52,6 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
   mem->memory[mem->size] = 0; // havent still discovered whats this!
   return realsize;
 }
-
 /*this helps in sending the data to the url as payload
 url   :this is the post url
 paylod : this is the xml/text data that is to be uploaded
@@ -124,7 +146,37 @@ long perform_get(char* url){
     curl_easy_cleanup(curl);
   return response_code;
 }
-int main(int argc, char const *argv[]) {
+
+/*this iis to test the conversion of structures to jso strings and if all works fine*/
+int test_jsonification(){
+  KeyValuePair kvLocation={"location","Kothrud, Pune 38",jsonify_strfield};
+  KeyValuePair kvDuty={"duty","Measure ambient conditions",jsonify_strfield};
+  KeyValuePair kvType={"type","RPi3B",jsonify_strfield};
+  KeyValuePair* payload = malloc(3*sizeof(KeyValuePair));
+  *(payload)= kvLocation;
+  *(payload+1) = kvDuty;
+  *(payload+2)= kvType;
+  char* prefix_string ="[{";
+  char* suffix_string = "}]";
+  char* json_string  = malloc(strlen(prefix_string));
+  memcpy(json_string, prefix_string,strlen(prefix_string)+1);
+  // printf("%s\n",json_string );
+  // size_t i;
+  // for ( i= 0; i < 3; i++) {
+  //   char* toAppend = payload->Jsonify(payload->key, payload->strValue);
+  //   json_string =  realloc(json_string, strlen(toAppend)+1);
+  //   memcpy(json_string+strlen(json_string), toAppend,strlen(toAppend)+1);
+  //   ++payload;
+  // }
+  char* toAppend = payload->Jsonify(payload->key, payload->strValue);
+  json_string =  realloc(json_string, strlen(json_string)+strlen(toAppend)+1);
+  memcpy(json_string+strlen(json_string),toAppend,strlen(toAppend)+1);
+  json_string =  realloc(json_string, strlen(json_string)+strlen(suffix_string)+1);
+  memcpy(json_string+strlen(json_string),suffix_string,strlen(suffix_string)+1);
+  printf("%s\n",json_string );
+}
+/*testing function to see if we can work with the libcurl function*/
+int test_urlsend(){
   char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
   perform_get(url);
   // the json string if not formatted correctly would result in internal server error 500
@@ -136,4 +188,7 @@ int main(int argc, char const *argv[]) {
   // we can then try the same request with invalid payload
   perform_post(url,invalidDeviceDetails);
   return 0;
+}
+int main(int argc, char const *argv[]) {
+  test_jsonification();
 }
