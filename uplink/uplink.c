@@ -13,11 +13,12 @@ struct MemoryStruct {
   char *memory;
   size_t size;
 };
-typedef char* (*jsonify)(char*, char*);
+typedef char* (*jsonify)(char*, char*, short);
 typedef struct structkeyvaluepair{
   char* key;
   char* strValue ;
   jsonify Jsonify;
+  short isEdge; //this lets the json parser that a ',' is needed or
 }KeyValuePair;
 /*This defines the KeyValuePair of json values that needs to be read back into a
 json string before being sent across to the server. The client can now still put
@@ -26,14 +27,26 @@ Want to know how to effectively define structures ?
 https://www.programiz.com/c-programming/c-structures
 Want to know how we can store function pointers in structures ?
 http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)FunctionPointers.html*/
-char* jsonify_strfield(char* key, char* value){
+char* jsonify_strfield(char* key, char* value, short isEdge){
     //this assumes the field value is char* type and thus converts the same
     char* new_result= malloc(strlen(key)+strlen(value)+10); // initiating to a proper size
     if(!new_result){
       fprintf(stderr, "Out of memory , failed jsonification \n");
       return "";
     }
-    sprintf(new_result ,"\"%s\":\"%s\"",key, value); // printing on the variable
+    switch (isEdge) {
+      case 0:
+        sprintf(new_result ,"\"%s\":\"%s\",",key, value); // printing on the variable
+        break;
+      case 1:
+        sprintf(new_result ,"\"%s\":\"%s\"}",key, value); // printing on the variable
+        break;
+      case -1:
+        sprintf(new_result ,"{\"%s\":\"%s\",",key, value); // printing on the variable
+        break;
+      default:
+        sprintf(new_result ,"\"%s\":\"%s\",",key, value);
+    }
     return new_result;
   }
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp){
@@ -140,43 +153,34 @@ long perform_get(char* url){
     curl_easy_cleanup(curl);
   return response_code;
 }
-
 /*this iis to test the conversion of structures to jso strings and if all works fine*/
-int test_jsonification(){
-  KeyValuePair kvLocation={"location","Kothrud Pune 38",jsonify_strfield};
-  KeyValuePair kvDuty={"duty","Measure ambient conditions",jsonify_strfield};
-  KeyValuePair kvType={"type","RPi3B",jsonify_strfield};
+char* test_jsonification(){
+  KeyValuePair kvLocation={"location","",jsonify_strfield, -1};
+  KeyValuePair kvDuty={"duty","Measure air pollutants",jsonify_strfield, 0};
+  KeyValuePair kvType={"type","RPi3B+ but not sure of the version",jsonify_strfield, 1};
   KeyValuePair* payload = malloc(3*sizeof(KeyValuePair));
   *(payload)= kvLocation;
   *(payload+1) = kvDuty;
   *(payload+2)= kvType;
-  char* prefix_string ="[{";
-  char* suffix_string = "}]";
-  char* json_string  = malloc(strlen(prefix_string));
-  memcpy(json_string, prefix_string,strlen(prefix_string)+1);
-  /*The sizeof operator is used for arrays that are statically allocated and not
-  for things that are dynamically allocated , like it is here in this case
-  So it looks we woul have to keep trak of it ourselves
-  https://stackoverflow.com/questions/8717267/how-to-get-the-length-of-a-dynamically-created-array-of-structs-in-c*/
+  /*If you are asking what is the point of malloc(0)
+  https://stackoverflow.com/questions/2022335/whats-the-point-in-malloc0*/
+  /*remeber here that malloc(0) does not actually allocate zero bytes as intuitively suggested
+  it would still have a some garbage string - I have tried comapring that to a NULL , empty and even strlen("")
+  nothing works, you have to set that to explicit memset to 0*/
+  char* json_string  = malloc(0);
+  memset(json_string,0,strlen(json_string));
   size_t i = 0,count = 3;
-  for (i=0; i < count; i++) {
-    char* toAppend = payload->Jsonify(payload->key, payload->strValue); //string to append
-    // +1 for the \0 ending character for strings
-    //check the position in memcpy we are appending the string hence
-    json_string =  realloc(json_string, strlen(json_string)+strlen(toAppend)+1);
-    memcpy(json_string+strlen(json_string),toAppend,strlen(toAppend)+1);
-    if (i<(count-1)) {
-      // we need to add ',' in between all the json values
-      json_string = realloc(json_string, strlen(json_string)+1);
-      memcpy(json_string+strlen(json_string), ",", strlen(",")+1);
-    }
+  for (i = 0; i < count; i++) {
+    char* appendix = payload->Jsonify(payload->key, payload->strValue, payload->isEdge);
+    json_string = realloc(json_string,strlen(appendix)+1+strlen(json_string));
+    memcpy(json_string+strlen(json_string),appendix,strlen(appendix));
     payload++;
   }
-  json_string =  realloc(json_string, strlen(json_string)+strlen(suffix_string)+1);
-  memcpy(json_string+strlen(json_string),suffix_string,strlen(suffix_string)+1);
-  printf("%s\n",json_string );
+  printf("From within the function :\n");
+  printf("%s\n",json_string);
+  return json_string;
 }
-/*testing function to see if we can work with the libcurl function*/
+
 int test_urlsend(){
   char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
   perform_get(url);
@@ -191,5 +195,10 @@ int test_urlsend(){
   return 0;
 }
 int main(int argc, char const *argv[]) {
-  test_jsonification();
+  // char* result = test_jsonification();
+  char* json  = test_jsonification();
+  printf("%s\n",json);
+  // printf("%s\n",result);
+  // char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
+  // long rcode =perform_post(url,json);
 }
