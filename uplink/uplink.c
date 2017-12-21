@@ -131,12 +131,6 @@ long perform_get(char* url){
     goto cleanup;
   }
   else {
-   /*
-    * Now, our chunk.memory points to a memory block that is chunk.size
-    * bytes big and contains the remote file.
-    *
-    * Do something nice with it!
-    */
    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
    printf("%lu bytes retrieved\n", (long)chunk.size);
    printf("The data we have received is : %s\n", chunk.memory);
@@ -149,7 +143,7 @@ long perform_get(char* url){
 
 /*this iis to test the conversion of structures to jso strings and if all works fine*/
 int test_jsonification(){
-  KeyValuePair kvLocation={"location","Kothrud, Pune 38",jsonify_strfield};
+  KeyValuePair kvLocation={"location","Kothrud Pune 38",jsonify_strfield};
   KeyValuePair kvDuty={"duty","Measure ambient conditions",jsonify_strfield};
   KeyValuePair kvType={"type","RPi3B",jsonify_strfield};
   KeyValuePair* payload = malloc(3*sizeof(KeyValuePair));
@@ -160,17 +154,24 @@ int test_jsonification(){
   char* suffix_string = "}]";
   char* json_string  = malloc(strlen(prefix_string));
   memcpy(json_string, prefix_string,strlen(prefix_string)+1);
-  // printf("%s\n",json_string );
-  // size_t i;
-  // for ( i= 0; i < 3; i++) {
-  //   char* toAppend = payload->Jsonify(payload->key, payload->strValue);
-  //   json_string =  realloc(json_string, strlen(toAppend)+1);
-  //   memcpy(json_string+strlen(json_string), toAppend,strlen(toAppend)+1);
-  //   ++payload;
-  // }
-  char* toAppend = payload->Jsonify(payload->key, payload->strValue);
-  json_string =  realloc(json_string, strlen(json_string)+strlen(toAppend)+1);
-  memcpy(json_string+strlen(json_string),toAppend,strlen(toAppend)+1);
+  /*The sizeof operator is used for arrays that are statically allocated and not
+  for things that are dynamically allocated , like it is here in this case
+  So it looks we woul have to keep trak of it ourselves
+  https://stackoverflow.com/questions/8717267/how-to-get-the-length-of-a-dynamically-created-array-of-structs-in-c*/
+  size_t i = 0,count = 3;
+  for (i=0; i < count; i++) {
+    char* toAppend = payload->Jsonify(payload->key, payload->strValue); //string to append
+    // +1 for the \0 ending character for strings
+    //check the position in memcpy we are appending the string hence
+    json_string =  realloc(json_string, strlen(json_string)+strlen(toAppend)+1);
+    memcpy(json_string+strlen(json_string),toAppend,strlen(toAppend)+1);
+    if (i<(count-1)) {
+      // we need to add ',' in between all the json values
+      json_string = realloc(json_string, strlen(json_string)+1);
+      memcpy(json_string+strlen(json_string), ",", strlen(",")+1);
+    }
+    payload++;
+  }
   json_string =  realloc(json_string, strlen(json_string)+strlen(suffix_string)+1);
   memcpy(json_string+strlen(json_string),suffix_string,strlen(suffix_string)+1);
   printf("%s\n",json_string );
