@@ -109,7 +109,7 @@ long url_post(char* url, char* payload){
     // curl_global_cleanup();
   return response_code;
 }
-long url_get(char* url,char* content,long* response,int* ok){
+long url_get(char* url, char** content,long* response,int* ok){
   *ok  = 0; //at the onset everything is ok
   CURL *curl;
   CURLcode res;
@@ -118,37 +118,47 @@ long url_get(char* url,char* content,long* response,int* ok){
   memset(chunk.memory, 0, strlen(chunk.memory));
   chunk.size = 0;    /* no data at this point */
   curl = curl_easy_init();
+  char error_buf[CURL_ERROR_SIZE];
   if(!curl){
     // is the case when we could not init the curl pointer itself
-    perror("failed to instantiate the CURL client");
+    fprintf(stderr, "failed to instantiate the CURL client");
     *ok  = -1;
     goto cleanup;
   }
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   /* send all data to this function
   read more on the write function here :
   https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html*/
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L); //<= this is important, but not obvious
+  curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error_buf);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-  /* we pass our 'chunk' struct to the callback function */
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-  /* some servers don't like requests that are made without a user-agent
-     field, so we provide one */
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
   if(res = curl_easy_perform(curl) != CURLE_OK){
     fprintf(stderr, "We have error response from the server :%d\n", res);
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
-    printf("We have response code %ld from the server\n", *response);
+    // printf("We have response code %ld from the server\n", *response);
     goto cleanup;
   }
   else {
+    /*this is easy to miss, as this is counter intuitive if there is no content
+    from the server then chunk.memory would contain 'null' literal string ,
+    we are just making sure that we send NULL response when such a case occurs
+    If chunk.memory == "null" then contents == NULL*/
    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
-  /*this is easy to miss, as this is counter intuitive if there is no content
-  from the server then chunk.memory would contain 'null' literal string ,
-  we are just making sure that we send NULL response when such a case occurs
-  If chunk.memory == "null" then contents == NULL*/
-   if (0!=strcmp(chunk.memory, "null")) {
-     strcpy(content , chunk.memory);
+   if(0!=strcmp(chunk.memory, "null")){
+    //  this would send back not empty string outside
+    // please use strcmp(content, "")!=0 to know if there is content
+     *content = realloc(*content,strlen(chunk.memory)+1);
+     memcpy(*content,chunk.memory, strlen(chunk.memory));
+     goto cleanup;
+   }
+   else{
+    //  this would send back empty string
+    // please strcmp(content, "") to know if there is content or not
+     memset(*content,0,strlen(*content));
    }
   }
   cleanup:
@@ -223,7 +233,8 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
   free(result);
   return json_result;
 }
-/*if you want to know how to debug http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
+/*if you want to know how to debug
+http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
 int main_test(int argc, char const *argv[]) {
   KeyValuePair payload[] ={
     {"location","Kothrud Pune 38",jsonify_strfield},
@@ -259,17 +270,15 @@ int is_device_registered(char* baseUrl, char* uuid){
   memset(content,0,strlen(content));
   long response = 0;
   int ok  =0;
-  long bytes_received = url_get(url,content,&response,&ok);
+  long bytes_received = url_get(url,&content,&response,&ok);
   if (ok!=0 || response!=200) {
     fprintf(stderr, "Failed request to find device registration\n");
     return -1;
   }
   else{
-    if(0==strcmp(content,"")){
-      // device not found
-      return 0;
-    }
-    // device found
+    if(0==strcmp(content,"")){return 0;}
     else{return 1;}
   }
+  free(content);
+  return -1;
 }
