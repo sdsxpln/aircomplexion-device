@@ -109,18 +109,19 @@ long url_post(char* url, char* payload){
     // curl_global_cleanup();
   return response_code;
 }
-long url_get(char* url){
+long url_get(char* url,char* content,long* response,int* ok){
+  *ok  = 0; //at the onset everything is ok
   CURL *curl;
   CURLcode res;
-  int retCode  = 0;
   struct MemoryStruct chunk;
-  chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
+  chunk.memory = malloc(0);  /* will be grown as needed by the realloc above */
+  memset(chunk.memory, 0, strlen(chunk.memory));
   chunk.size = 0;    /* no data at this point */
   curl = curl_easy_init();
-  long response_code =0;
   if(!curl){
     // is the case when we could not init the curl pointer itself
     perror("failed to instantiate the CURL client");
+    *ok  = -1;
     goto cleanup;
   }
   curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -136,19 +137,23 @@ long url_get(char* url){
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
   if(res = curl_easy_perform(curl) != CURLE_OK){
     fprintf(stderr, "We have error response from the server :%d\n", res);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-    printf("We have response code %ld from the server\n", response_code);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
+    printf("We have response code %ld from the server\n", *response);
     goto cleanup;
   }
   else {
-   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-   printf("%lu bytes retrieved\n", (long)chunk.size);
-   printf("The data we have received is : %s\n", chunk.memory);
-   printf("We have response code %ld from the server\n", response_code);
+   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
+  /*this is easy to miss, as this is counter intuitive if there is no content
+  from the server then chunk.memory would contain 'null' literal string ,
+  we are just making sure that we send NULL response when such a case occurs
+  If chunk.memory == "null" then contents == NULL*/
+   if (0!=strcmp(chunk.memory, "null")) {
+     strcpy(content , chunk.memory);
+   }
   }
   cleanup:
     curl_easy_cleanup(curl);
-  return response_code;
+  return chunk.size;
 }
 unsigned short has_duplicate_keys(KeyValuePair arr[], unsigned int sz){
   // this function just returns if the there are 2 or more keys that have duplicate values
@@ -219,7 +224,7 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
   return json_result;
 }
 /*if you want to know how to debug http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
-int main(int argc, char const *argv[]) {
+int main_test(int argc, char const *argv[]) {
   KeyValuePair payload[] ={
     {"location","Kothrud Pune 38",jsonify_strfield},
     {"duty","Measure air pollutants",jsonify_strfield},
@@ -241,4 +246,30 @@ int main(int argc, char const *argv[]) {
   // // printf("%s\n",result);
   // char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
   // long rcode =url_post(url,json);
+}
+/* Quick check if device is found registered at the url
+Returns         :0 if not found, 1 if found, -1 if an eror
+baseUrl         :http://192.168.1.5:8038/ is the server port and ip
+uuid            :this is the uuid of the device that you are looking for*/
+int is_device_registered(char* baseUrl, char* uuid){
+  if(strcmp(uuid, "")==0 || 0==strcmp(baseUrl, "")){return -1;}
+  char url[strlen(baseUrl)+strlen(DEVICES_URL)+strlen(uuid)+2];
+  sprintf(url, "%s%s%s/",baseUrl,DEVICES_URL,uuid);
+  char* content = malloc(0);
+  memset(content,0,strlen(content));
+  long response = 0;
+  int ok  =0;
+  long bytes_received = url_get(url,content,&response,&ok);
+  if (ok!=0 || response!=200) {
+    fprintf(stderr, "Failed request to find device registration\n");
+    return -1;
+  }
+  else{
+    if(0==strcmp(content,"")){
+      // device not found
+      return 0;
+    }
+    // device found
+    else{return 1;}
+  }
 }

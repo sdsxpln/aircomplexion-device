@@ -20,7 +20,8 @@ typedef struct structkeyvaluepair{
   char* strValue ;
   jsonify Jsonify;
 }KeyValuePair;
-
+// this gives the rel url ahead of the base url to get the list of devices
+#define DEVICES_URL "api/uplink/devices/"
 /* functions to jsoify a single field in the given key value pair
 key         : is the name of the key of the field
 value       : is the value of the field under that key*/
@@ -35,5 +36,6 @@ returns the json string result of the entire serialized object
 Will not consider fields that are empty so expect an empty string if the key of the fields are invalid*/
 char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok);
 long url_post(char* url, char* payload);
-long url_get(char* url);
+long url_get(char* url,char* content,long* response,int* ok);
+int is_device_registered(char* baseUrl, char* uuid);
 #endif
