@@ -20,6 +20,14 @@ typedef struct structkeyvaluepair{
   char* strValue ;
   jsonify Jsonify;
 }KeyValuePair;
+/*this gives the details of the device being registered on the system
+once the device is registered it would parse the uuid into this and send it back*/
+typedef struct structdevicedetails{
+  char* location;
+  char* type;
+  char* duty;
+  char* uuid;
+}DeviceDetails;
 // this gives the rel url ahead of the base url to get the list of devices
 #define DEVICES_URL "api/uplink/devices/"
 /* functions to jsoify a single field in the given key value pair
@@ -35,7 +43,7 @@ ok              : the status of the result
 returns the json string result of the entire serialized object
 Will not consider fields that are empty so expect an empty string if the key of the fields are invalid*/
 char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok);
-long url_post(char* url, char* payload);
+long url_post(char* url, char* payload, char** content , long* response_code, int* ok);
 /*since content is double indirection it means it is output  - light bulb moment for me :)*/
 long url_get(char* url,char** content,long* response,int* ok);
 int is_device_registered(char* baseUrl,  char* uuid);
