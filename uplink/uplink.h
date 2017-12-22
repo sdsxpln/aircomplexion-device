@@ -27,7 +27,6 @@ value       : is the value of the field under that key*/
 char* jsonify_strfield(char* key, char* value);
 char* jsonify_numfield(char* key, char* value);
 char* jsonify_boolfield(char* key, char* value);
-
 /*Serializes the KeyValuePair[] to a json string that can be sent over the curl requests
 payload         : represents the object that would be serialized
 fields          : number of fields in the payload, also the number of items in the KeyValuePair[]
@@ -35,7 +34,6 @@ ok              : the status of the result
 returns the json string result of the entire serialized object
 Will not consider fields that are empty so expect an empty string if the key of the fields are invalid*/
 char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok);
-
 long url_post(char* url, char* payload);
 long url_get(char* url);
 #endif

@@ -6,7 +6,6 @@
 //     return size * nmemb;
 // }
 /*this function helps to send a GET request to the url */
-
 /*This defines the KeyValuePair of json values that needs to be read back into a
 json string before being sent across to the server. The client can now still put
 in values in a dictionary
@@ -151,6 +150,22 @@ long url_get(char* url){
     curl_easy_cleanup(curl);
   return response_code;
 }
+unsigned short has_duplicate_keys(KeyValuePair arr[], unsigned int sz){
+  // this function just returns if the there are 2 or more keys that have duplicate values
+  size_t i;
+  size_t j;
+  for (i = 0; i < sz; i++) {
+    KeyValuePair* temp  = arr;
+    for(j=i+1;j<sz; j++){
+      temp++;
+      if(0==strcmp(arr->key,temp->key)){
+        return 1;
+      }
+    }
+    arr++;
+  }
+  return 0;
+}
 char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
   *ok  = 0;
   char* json_string  = malloc(0);
@@ -161,6 +176,11 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
   }
   memset(json_string,0,strlen(json_string)); //dont miss this out
   size_t i = 0;
+  if(0!=has_duplicate_keys(payload, fields)){
+    fprintf(stderr, "Invalid Json Object : found duplicate fields \n");
+    *ok =-1;
+    return "";
+  }
   for (i = 0; i < fields; i++) {
     // only if we have a valid key
     if(0!=strcmp(payload->key, "") && payload->Jsonify != NULL){
@@ -199,17 +219,26 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
   return json_result;
 }
 /*if you want to know how to debug http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
-int main_test(int argc, char const *argv[]) {
+int main(int argc, char const *argv[]) {
   KeyValuePair payload[] ={
     {"location","Kothrud Pune 38",jsonify_strfield},
     {"duty","Measure air pollutants",jsonify_strfield},
     {"type","RPi3B+ but not sure of the version",jsonify_strfield},
-    {"random","1000",jsonify_numfield}
+    {"random","1000",jsonify_numfield},
+    {"license","true",jsonify_boolfield}
   };
+  // unsigned short  result  =has_duplicate_keys(payload, 4);
+  // printf("We have the result to be  : %d\n", result);
   int ok  = 0;
-  char* json  = json_serialize(payload, 4, &ok);
-  // printf("%s\n",json);
-  // printf("%s\n",result);
-  char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
-  long rcode =url_post(url,json);
+  char* json  = json_serialize(payload, 5, &ok);
+  if (ok!=0) {
+    fprintf(stderr, "failed serialization\n");
+  }
+  else{
+    printf("%s\n",json);
+  }
+  // // printf("%s\n",json);
+  // // printf("%s\n",result);
+  // char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
+  // long rcode =url_post(url,json);
 }

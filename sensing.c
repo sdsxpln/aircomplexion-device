@@ -281,3 +281,13 @@ void* ldr_loop(void* argc){
   }
   pthread_exit(0);
 }
+
+void* uplink_loop(void* argc){
+  // this is the threaded function that goes into sending information to the cloud
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ uplink_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
+  char* uuid  = "b0d90dee-b228-42b3-aa7b-e7e9850549a8";
+  char* url = ""
+}
