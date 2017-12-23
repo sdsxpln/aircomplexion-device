@@ -63,46 +63,42 @@ toSplit       :this is the string we intend to search and explode
 token           :tsubstring we are looking to demarkate and break the string
 left            :left side of the split string
 right           :right side of the split string
-rightClip       :right side of the split string can be clipped , if entire string is desired issue 0
+rightClip       :right side of the split string can be clipped ,
+if entire string is desired issue 0, negative integers cannot go in here
 Returns 0 for no errors and negative for errors
 */
-int splitstr_token(char* toSplit, char* token, char** left,
-  char** right, size_t rightClip){
-  // char* subStr = "\"uuid\": \"";
+int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip){
   size_t tokenSz  = strlen(token); //we are going to proceed as this much in each
   if(tokenSz==0 || strlen(toSplit)==0){return -1;} //exiting incase of bad inputs
   char* target = toSplit;
-  while (*target != '\0') {
+  // so if the string is not found the split portions are all empty
+  memset(*left, 0, strlen(*left));
+  memset(*right, 0, strlen(*right));
+  while (*target != '\0' && (strlen(target)>=tokenSz)) {
     /*Target would iassessed section wise - section size determined bu the token*/
     char* strSection  = malloc(tokenSz+1);
-    memset(strSection,0,strlen(strSection)+1);
+    memset(strSection,0,tokenSz+1);
     memcpy(strSection,target, tokenSz);//section formed
+    printf("Substring \t\t%s\n", strSection);
     if(0==strcmp(strSection,token)){
       // token is the section .. token found in the string
-      printf("Substring being compared\t\t%s\t\tsubstring found\n", strSection);
       // form the left side of the string, target is still on the left of the token
-      *left = realloc(*left,strlen(toSplit)-strlen(target)+1);
-      memset(*left,0,strlen(*left));
-      memcpy(*left,toSplit,strlen(toSplit)-strlen(target));
+      size_t leftLen = strlen(toSplit)-strlen(target);
+      *left = realloc(*left,leftLen+1);
+      memset(*left,0,leftLen+1);
+      memcpy(*left,toSplit,leftLen);
       target += tokenSz;//target is now at the end of the token
-      if(rightClip<=0){
-        *right = realloc(*right,strlen(target)+1);
-        memset(*right,0,strlen(target)+1);
-        memcpy(*right,target,strlen(target));
-      }
-      else{
-        // case where you need to clip the right result
-        *right = realloc(*right,rightClip+1);
-        memset(*right,0,rightClip+1);
-        memcpy(*right,target,rightClip);
-      }
+      if(rightClip<=0){rightClip = strlen(target);}
+      *right = realloc(*right,rightClip+1);
+      memset(*right,0,rightClip+1);
+      memcpy(*right,target,rightClip);
       // now forming the clipped result
       break;
     }
     // Moving to next section
     //move on the string being searched from the next character onwards to section length
-    target++;
     free(strSection);
+    target++;
   }
   return 0;
 }
@@ -134,17 +130,17 @@ void test_post_requests(){
 int main(int argc, char const *argv[]) {
   DeviceDetails dd={"Hinjawadi Phase1","RPi3B+","Measuring the ambient conditions","0513ea9a-a8b3-4300-bd29-dbbca89cc781"};
   KeyValuePair payload[] ={
-    {"uuid",dd.uuid, jsonify_strfield},
-    {"location",dd.location, jsonify_strfield},
     {"type",dd.type, jsonify_strfield},
     {"duty",dd.duty, jsonify_strfield},
+    {"uuid",dd.uuid, jsonify_strfield},
+    {"location",dd.location, jsonify_strfield},
   };
   int ok =0;
-  char* jsonPayload  = json_serialize(payload, 3, &ok);
+  char* jsonPayload  = json_serialize(payload, 4, &ok);
   char* left  = malloc(0);
   char* right = malloc(0);
   printf("%s\n", jsonPayload);
-  int result = splitstr_token(jsonPayload ,"\"uuid\":", &left, &right, 12);
+  int result = splitstr_token(jsonPayload ,"\"uuid\": \"", &left, &right, 36);
   printf("%s\n",left);
   printf("%s\n",right);
   return 0;

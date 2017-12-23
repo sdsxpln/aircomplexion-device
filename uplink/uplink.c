@@ -21,7 +21,7 @@ char* jsonify_strfield(char* key, char* value){
       return "";
     }
     // notice that there is , mark after every field
-    sprintf(new_result ,"\"%s\":\"%s\",",key, value);
+    sprintf(new_result ,"\"%s\": \"%s\",",key, value);
     return new_result;
   }
 char* jsonify_numfield(char* key, char* value){
@@ -32,7 +32,7 @@ char* jsonify_numfield(char* key, char* value){
       return "";
     }
     // notice that there is , mark after every field
-    sprintf(new_result ,"\"%s\":%s,",key, value);
+    sprintf(new_result ,"\"%s\": %s,",key, value);
     return new_result;
   }
 char* jsonify_boolfield(char* key, char* value){
@@ -43,7 +43,7 @@ char* jsonify_boolfield(char* key, char* value){
     return "";
   }
   // notice that there is , mark after every field
-  sprintf(new_result ,"\"%s\":%s,",key, value);
+  sprintf(new_result ,"\"%s\": %s,",key, value);
   return new_result;
 }
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp){
