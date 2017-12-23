@@ -110,35 +110,49 @@ void test_string_split(){
   }
   else{printf("Failed to spot the token in the string\n");}
 }
-int main(int argc, char const *argv[]) {
-  char* uuid  = "ae98db62-8b4c-465a-9381-d20e77ab047f";
-  DeviceDetails* dd = (DeviceDetails*)malloc(sizeof(DeviceDetails));
-  dd->location ="Hinjawadi Phase1";
-  dd->type = "RPi3B+";
-  dd->duty = "Measuring ambient conditions";
-  dd->uuid = malloc(strlen(uuid)+1);
-  memcpy(dd->uuid, uuid, strlen(uuid));
-  // NOTE: this method does have everything that we have tested in pieces i
-  // printf("Device registratin returned %d\n",is_device_registered(baseUrl,uuid));
-  // if(register_device(dd,baseUrl) ==0){
-  //   printf("We have posted the new device details\n%s\n",dd->uuid);
-  // }
-  if (is_device_registered(baseUrl,uuid)==0) {
-    printf("Device not found\n");
-    if(register_device(dd,baseUrl) ==0){
-      printf("We have posted the new device details\n%s\n",dd->uuid);
-    }
+// NOTE: how to design a simple system that can give us a simple jsonification system
+int to_json(KeyValuePair payload[], int fields ,char** json){
+  size_t i =0;
+  char* lDelim = "{";
+  printf("%d: delimiter string length\n",strlen(lDelim));
+  char* result = (char*)malloc(2*sizeof(char));
+  if (result == NULL) {
+    fprintf(stderr, "%s\n", "Out of memory , Cannot convert to json");
+    return -1;
   }
-  else{
-    printf("Device already registered\n");
+  memcpy(result, lDelim, strlen(result));
+  printf("%s\n", result);
+  for (i = 0; i < fields; i++) {
+    char* fieldsAsJson  = payload->Jsonify(payload->key, payload->strValue);
+    result = (char*)realloc(result, strlen(result)+strlen(fieldsAsJson)+1);
+    memcpy(result+strlen(result),fieldsAsJson,strlen(fieldsAsJson));
+    payload++;
   }
-  // dd.type ="";
-  // assert(register_device(&dd,baseUrl) !=0);
-  // printf("Now for the invalid url test \n");
-  // dd.location ="Hinjawadi Phase1, Pune 57";
-  // dd.type = "RPi3B+";
-  // dd.duty = "Measuring ambient conditions";
-  // char* invalidbaseUrl = "http://192.168.1.5:8036/";
-  // assert(register_device(&dd,invalidbaseUrl) !=0);
+  // now to remove the leading ',' and add the rDelim character
+  char* temp = result;
+  while(*temp!='\0'){temp++;}
+  *(temp-1)='}';//<< replacing the last ',' with delimiting '}'
+  *json = realloc(*json, strlen(result)+1);
+  *json  = strdup(result);
   return 0;
+}
+int main(int argc, char const *argv[]) {
+  KeyValuePair payload[] ={
+    {"type","RPi3B", jsonify_strfield},
+    {"duty","Ambient conditions monitoring", jsonify_strfield},
+    {"uuid","a99745ad-9f17-45e6-83ac-c00d5e06b8c4", jsonify_strfield},
+    {"location","Kothrud Pune 38", jsonify_strfield},
+  };
+  KeyValuePair payload_1[] ={
+    {"type","RPi3B+", jsonify_strfield},
+    {"duty","Ambient conditions monitoring", jsonify_strfield},
+    {"uuid","a99745ad-9f17-45e6-83ac-c00d5e06b8c4", jsonify_strfield},
+    {"location","Kothrud Pune 38, Near Shivaji Statue", jsonify_strfield},
+  };
+  char* json = (char*)malloc(1);
+  int result  = to_json(payload,4,&json);
+  printf("%s\n",json);
+  // free(json);
+  result  = to_json(payload_1,4,&json);
+  printf("%s\n",json);
 }
