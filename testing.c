@@ -115,7 +115,7 @@ int to_json(KeyValuePair payload[], int fields ,char** json){
   size_t i =0;
   char* lDelim = "{";
   printf("%d: delimiter string length\n",strlen(lDelim));
-  char* result = (char*)malloc(2*sizeof(char));
+  char* result = (char*)malloc(2*sizeof(char)); //<< 2*sizeof(char), dont use strlen(lDelim)+1 - the character may not be one byte always
   if (result == NULL) {
     fprintf(stderr, "%s\n", "Out of memory , Cannot convert to json");
     return -1;
@@ -134,6 +134,9 @@ int to_json(KeyValuePair payload[], int fields ,char** json){
   *(temp-1)='}';//<< replacing the last ',' with delimiting '}'
   *json = realloc(*json, strlen(result)+1);
   *json  = strdup(result);
+  // Never free result, despite beig allocated here
+  // strdup() is shallow duplication and the same memory is being referenced outside
+  // some delta change
   return 0;
 }
 int main(int argc, char const *argv[]) {
@@ -152,7 +155,6 @@ int main(int argc, char const *argv[]) {
   char* json = (char*)malloc(1);
   int result  = to_json(payload,4,&json);
   printf("%s\n",json);
-  // free(json);
   result  = to_json(payload_1,4,&json);
   printf("%s\n",json);
 }
