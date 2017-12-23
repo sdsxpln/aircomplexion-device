@@ -50,24 +50,6 @@ void test_uplinking(){
   }
   return;
 }
-void test_register_new_device(){
-  DeviceDetails details={"Hinjawadi Phase1","RPi3B+","Measuring the ambient conditions"};
-  int result =register_device(&details, baseUrl);
-  printf("%d : Return code from the function\n", result);
-}
-/*Finds and splits a string into 2 sections on the first occurence of the token
-This will not find multiple token occurences and as such would need a better function
-But for now this forms the basis of de-serialize the strings we receive from http response
-Please note, the split result will NOT include the token
-toSplit       :this is the string we intend to search and explode
-token           :tsubstring we are looking to demarkate and break the string
-left            :left side of the split string
-right           :right side of the split string
-rightClip       :right side of the split string can be clipped ,
-if entire string is desired issue 0, negative integers cannot go in here
-Returns 0 for no errors and negative for errors
-*/
-
 void test_post_requests(){
   char url[strlen(baseUrl)+strlen("api/uplink/devices/")+1];
   sprintf(url, "%s%s",baseUrl,"api/uplink/devices/");
@@ -129,22 +111,34 @@ void test_string_split(){
   else{printf("Failed to spot the token in the string\n");}
 }
 int main(int argc, char const *argv[]) {
-  DeviceDetails dd;
-  dd.location ="Hinjawadi Phase1, Pune 57";
-  dd.type = "RPi3B+";
-  dd.duty = "Measuring ambient conditions";
-  // TODO: test this with empty strings on device details.
-  // TODO: incorrect base url  - lets see if that works
-  if(register_device(&dd,baseUrl) ==0){
-    printf("We have posted the new device details\n%s\n",dd.uuid);
+  char* uuid  = "ae98db62-8b4c-465a-9381-d20e77ab047f";
+  DeviceDetails* dd = (DeviceDetails*)malloc(sizeof(DeviceDetails));
+  dd->location ="Hinjawadi Phase1";
+  dd->type = "RPi3B+";
+  dd->duty = "Measuring ambient conditions";
+  dd->uuid = malloc(strlen(uuid)+1);
+  memcpy(dd->uuid, uuid, strlen(uuid));
+  // NOTE: this method does have everything that we have tested in pieces i
+  // printf("Device registratin returned %d\n",is_device_registered(baseUrl,uuid));
+  // if(register_device(dd,baseUrl) ==0){
+  //   printf("We have posted the new device details\n%s\n",dd->uuid);
+  // }
+  if (is_device_registered(baseUrl,uuid)==0) {
+    printf("Device not found\n");
+    if(register_device(dd,baseUrl) ==0){
+      printf("We have posted the new device details\n%s\n",dd->uuid);
+    }
   }
-  dd.type ="";
-  assert(register_device(&dd,baseUrl) !=0);
-  printf("Now for the invalid url test \n");
-  dd.location ="Hinjawadi Phase1, Pune 57";
-  dd.type = "RPi3B+";
-  dd.duty = "Measuring ambient conditions";
-  char* invalidbaseUrl = "http://192.168.1.5:8036/";
-  assert(register_device(&dd,invalidbaseUrl) !=0);
+  else{
+    printf("Device already registered\n");
+  }
+  // dd.type ="";
+  // assert(register_device(&dd,baseUrl) !=0);
+  // printf("Now for the invalid url test \n");
+  // dd.location ="Hinjawadi Phase1, Pune 57";
+  // dd.type = "RPi3B+";
+  // dd.duty = "Measuring ambient conditions";
+  // char* invalidbaseUrl = "http://192.168.1.5:8036/";
+  // assert(register_device(&dd,invalidbaseUrl) !=0);
   return 0;
 }

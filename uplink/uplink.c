@@ -211,12 +211,11 @@ unsigned short has_duplicate_keys(KeyValuePair arr[], unsigned int sz){
 char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
   *ok  = 0;
   char* json_string  = malloc(0);
-  if (json_string==NULL) {
-    fprintf(stderr, "Out of memory\n");
-    *ok  = -1;
-    return "";
-  }
+  char* result = malloc(0);
+  char* json_result = malloc(0);
   memset(json_string,0,strlen(json_string)); //dont miss this out
+  memset(result,0,strlen(result)); //dont miss this out
+  memset(json_result,0,strlen(json_result)); //dont miss this out
   size_t i = 0;
   if(0!=has_duplicate_keys(payload, fields)){
     fprintf(stderr, "Invalid Json Object : found duplicate fields \n");
@@ -228,7 +227,7 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
     if(0!=strcmp(payload->key, "") && payload->Jsonify != NULL){
       // getting the json string of the field
       char* appendix = payload->Jsonify(payload->key, payload->strValue);
-      json_string = realloc(json_string,strlen(appendix)+1+strlen(json_string));
+      json_string = realloc(json_string,strlen(appendix)+strlen(json_string)+1);
       if (json_string == NULL) {
         fprintf(stderr, "Out of memory\n");
         *ok  = -1;
@@ -238,30 +237,42 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
     }
     payload++; //moving to the next field
   }
+  printf("%s\n",json_string);
   // here we make that a object from the string that it is
-  char* result = malloc(strlen(json_string)) ;
+  result = realloc(result, strlen(json_string)) ;
   if (result == NULL) {
     fprintf(stderr, "Out of memory\n");
     *ok  = -1;
     return "";
   }
-  memset(result, 0, strlen(result));
   memcpy(result, json_string, strlen(json_string)-1);
-  char* json_result = malloc(strlen(result)+2);
+  json_result = realloc(json_result,strlen(result)+3);
   if (json_result == NULL) {
     fprintf(stderr, "Out of memory\n");
     *ok  = -1;
     return "";
   }
-  memset(json_result, 0, strlen(json_result));
   sprintf(json_result,"{%s}", result);
+  printf("%s\n",json_result);
   // printf("%s\n",json_result);
-  free(json_string);
-  free(result);
+  // free(json_string);
+  // free(result);
   return json_result;
 }
 /*if you want to know how to debug
 http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
+/*Finds and splits a string into 2 sections on the first occurence of the token
+This will not find multiple token occurences and as such would need a better function
+But for now this forms the basis of de-serialize the strings we receive from http response
+Please note, the split result will NOT include the token
+toSplit       :this is the string we intend to search and explode
+token           :tsubstring we are looking to demarkate and break the string
+left            :left side of the split string
+right           :right side of the split string
+rightClip       :right side of the split string can be clipped ,
+if entire string is desired issue 0, negative integers cannot go in here
+Returns 0 for no errors and negative for errors
+*/
 int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip){
   size_t tokenSz  = strlen(token); //we are going to proceed as this much in each
   if(tokenSz==0 || strlen(toSplit)==0){return -1;} //exiting incase of bad inputs
@@ -292,7 +303,7 @@ int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rig
     }
     // Moving to next section
     //move on the string being searched from the next character onwards to section length
-    free(strSection);
+    // free(strSection);
     target++;
   }
   if (0==strcmp(*left,"") && 0==strcmp(*right,"")) {
@@ -331,7 +342,7 @@ int is_device_registered(char* baseUrl, char* uuid){
   if(strcmp(uuid, "")==0 || 0==strcmp(baseUrl, "")){return -1;}
   char url[strlen(baseUrl)+strlen(DEVICES_URL)+strlen(uuid)+2];
   sprintf(url, "%s%s%s/",baseUrl,DEVICES_URL,uuid);
-  char* content = malloc(0);
+  char* content = (char*)malloc(0);
   memset(content,0,strlen(content));
   long response = 0;
   int ok  =0;
@@ -344,19 +355,18 @@ int is_device_registered(char* baseUrl, char* uuid){
     if(0==strcmp(content,"")){return 0;}
     else{return 1;}
   }
-  free(content);
   return -1;
 }
 int register_device(DeviceDetails* dd, char* baseUrl){
 
   char url[strlen(baseUrl)+strlen(DEVICES_URL)+1]; //complete url
   sprintf(url, "%s%s",baseUrl,DEVICES_URL); //making the complete  url
-  char* content = malloc(0); // this the body of the response
+  char* content = malloc(1); // this the body of the response
   memset(content,0, strlen(content)); //setting the body of response to ""
   long response_code = 0; // HTTP response code
   int ok =0; //this function overall status
-  char * left = malloc(0); //response body fragment left
-  char* right = malloc(0); //response body fragment right
+  char * left = malloc(1); //response body fragment left
+  char* right = malloc(1); //response body fragment right
   // quit the function as early as possible
   if(!dd){return -1;}
   // we for now know there are 3 fields that make up device DeviceDetails
@@ -373,21 +383,20 @@ int register_device(DeviceDetails* dd, char* baseUrl){
   };
   // this payload now needs to seriliazed
   char* jsonPayload  = json_serialize(payload, 3, &ok);
+  printf("Debug point\n");
   if(ok==0){
     long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
+    printf("Error response from the server :\n%s\n",content);
     if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
       printf("Response code is %d\n",response_code );
       if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
         if(0!=strcmp(right,"")){
+          printf("%s\n", right);
           dd->uuid  = realloc(dd->uuid, strlen(right)+1);
           memcpy(dd->uuid, right,strlen(right));
-          free(left);
-          free(right);
           return 0;
         }
         else{
-          free(right);
-          free(left);
           fprintf(stderr, "Could not get the uuid of the newly posted device, Device may have been posted\n");
           return -1;
         }
