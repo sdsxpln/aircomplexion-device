@@ -138,5 +138,13 @@ int main(int argc, char const *argv[]) {
   if(register_device(&dd,baseUrl) ==0){
     printf("We have posted the new device details\n%s\n",dd.uuid);
   }
+  dd.type ="";
+  assert(register_device(&dd,baseUrl) !=0);
+  printf("Now for the invalid url test \n");
+  dd.location ="Hinjawadi Phase1, Pune 57";
+  dd.type = "RPi3B+";
+  dd.duty = "Measuring ambient conditions";
+  char* invalidbaseUrl = "http://192.168.1.5:8036/";
+  assert(register_device(&dd,invalidbaseUrl) !=0);
   return 0;
 }

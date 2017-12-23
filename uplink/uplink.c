@@ -104,6 +104,7 @@ long url_post(char* url, char* payload, char** content , long* response_code, in
   curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L); //<= this is important, but not obvious
   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error_buf);
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
   /*actually performing the curl request*/
   response =curl_easy_perform(curl);
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
@@ -161,6 +162,7 @@ long url_get(char* url, char** content,long* response,int* ok){
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
   if(res = curl_easy_perform(curl) != CURLE_OK){
     fprintf(stderr, "We have error response from the server :%d\n", res);
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
@@ -359,6 +361,11 @@ int register_device(DeviceDetails* dd, char* baseUrl){
   if(!dd){return -1;}
   // we for now know there are 3 fields that make up device DeviceDetails
   // except the uuid - which is device identification
+  if (strcmp(dd->location,"")==0 || 0==strcmp(dd->type,"") || 0==strcmp(dd->duty, "")) {
+    /*exit earyl in case of invalid inputs*/
+    fprintf(stderr, "Device details are invalid for the device to be registered\n");
+    return -1;
+  }
   KeyValuePair payload[] ={
     {"location",dd->location, jsonify_strfield},
     {"type",dd->type, jsonify_strfield},
@@ -369,6 +376,7 @@ int register_device(DeviceDetails* dd, char* baseUrl){
   if(ok==0){
     long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
     if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
+      printf("Response code is %d\n",response_code );
       if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
         if(0!=strcmp(right,"")){
           dd->uuid  = realloc(dd->uuid, strlen(right)+1);
