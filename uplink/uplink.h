@@ -43,6 +43,7 @@ ok              : the status of the result
 returns the json string result of the entire serialized object
 Will not consider fields that are empty so expect an empty string if the key of the fields are invalid*/
 char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok);
+int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip);
 long url_post(char* url, char* payload, char** content , long* response_code, int* ok);
 /*since content is double indirection it means it is output  - light bulb moment for me :)*/
 long url_get(char* url,char** content,long* response,int* ok);

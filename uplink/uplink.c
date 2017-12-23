@@ -260,6 +260,44 @@ char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
 }
 /*if you want to know how to debug
 http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
+int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip){
+  size_t tokenSz  = strlen(token); //we are going to proceed as this much in each
+  if(tokenSz==0 || strlen(toSplit)==0){return -1;} //exiting incase of bad inputs
+  char* target = toSplit;
+  // so if the string is not found the split portions are all empty
+  memset(*left, 0, strlen(*left));
+  memset(*right, 0, strlen(*right));
+  while (*target != '\0' && (strlen(target)>=tokenSz)) {
+    /*Target would iassessed section wise - section size determined bu the token*/
+    char* strSection  = malloc(tokenSz+1);
+    memset(strSection,0,tokenSz+1);
+    memcpy(strSection,target, tokenSz);//section formed
+    printf("Substring \t\t%s\n", strSection);
+    if(0==strcmp(strSection,token)){
+      // token is the section .. token found in the string
+      // form the left side of the string, target is still on the left of the token
+      size_t leftLen = strlen(toSplit)-strlen(target);
+      *left = realloc(*left,leftLen+1);
+      memset(*left,0,leftLen+1);
+      memcpy(*left,toSplit,leftLen);
+      target += tokenSz;//target is now at the end of the token
+      if(rightClip<=0){rightClip = strlen(target);}
+      *right = realloc(*right,rightClip+1);
+      memset(*right,0,rightClip+1);
+      memcpy(*right,target,rightClip);
+      // now forming the clipped result
+      break;
+    }
+    // Moving to next section
+    //move on the string being searched from the next character onwards to section length
+    free(strSection);
+    target++;
+  }
+  if (0==strcmp(*left,"") && 0==strcmp(*right,"")) {
+    return 0;
+  }
+  else{return 1;}
+}
 int main_test(int argc, char const *argv[]) {
   KeyValuePair payload[] ={
     {"location","Kothrud Pune 38",jsonify_strfield},
@@ -308,6 +346,16 @@ int is_device_registered(char* baseUrl, char* uuid){
   return -1;
 }
 int register_device(DeviceDetails* dd, char* baseUrl){
+
+  char url[strlen(baseUrl)+strlen(DEVICES_URL)+1]; //complete url
+  sprintf(url, "%s%s",baseUrl,DEVICES_URL); //making the complete  url
+  char* content = malloc(0); // this the body of the response
+  memset(content,0, strlen(content)); //setting the body of response to ""
+  long response_code = 0; // HTTP response code
+  int ok =0; //this function overall status
+  char * left = malloc(0); //response body fragment left
+  char* right = malloc(0); //response body fragment right
+  // quit the function as early as possible
   if(!dd){return -1;}
   // we for now know there are 3 fields that make up device DeviceDetails
   // except the uuid - which is device identification
@@ -317,12 +365,38 @@ int register_device(DeviceDetails* dd, char* baseUrl){
     {"duty",dd->duty, jsonify_strfield},
   };
   // this payload now needs to seriliazed
-  int ok =0;
   char* jsonPayload  = json_serialize(payload, 3, &ok);
-  printf("We have the json payload ready for posting\n");
-  printf("%s\n",jsonPayload);
   if(ok==0){
-    // long bytes_received  =url_post(url, jsonPayload);
+    long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
+    if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
+      if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
+        if(0!=strcmp(right,"")){
+          dd->uuid  = realloc(dd->uuid, strlen(right)+1);
+          memcpy(dd->uuid, right,strlen(right));
+          free(left);
+          free(right);
+          return 0;
+        }
+        else{
+          free(right);
+          free(left);
+          fprintf(stderr, "Could not get the uuid of the newly posted device, Device may have been posted\n");
+          return -1;
+        }
+      }
+      else{
+        fprintf(stderr, "Device might have been posted, error parsing response from the server\n");
+        return -1;
+      }
+    }
+    else{
+      fprintf(stderr, "Failed server request to post the new device details \n");
+      return -1;
+    }
+  }
+  else{
+    fprintf(stderr, "Failed jsonification of the payload \n");
+    return -1;
   }
   return 0;
 }

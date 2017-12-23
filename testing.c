@@ -67,57 +67,32 @@ rightClip       :right side of the split string can be clipped ,
 if entire string is desired issue 0, negative integers cannot go in here
 Returns 0 for no errors and negative for errors
 */
-int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip){
-  size_t tokenSz  = strlen(token); //we are going to proceed as this much in each
-  if(tokenSz==0 || strlen(toSplit)==0){return -1;} //exiting incase of bad inputs
-  char* target = toSplit;
-  // so if the string is not found the split portions are all empty
-  memset(*left, 0, strlen(*left));
-  memset(*right, 0, strlen(*right));
-  while (*target != '\0' && (strlen(target)>=tokenSz)) {
-    /*Target would iassessed section wise - section size determined bu the token*/
-    char* strSection  = malloc(tokenSz+1);
-    memset(strSection,0,tokenSz+1);
-    memcpy(strSection,target, tokenSz);//section formed
-    printf("Substring \t\t%s\n", strSection);
-    if(0==strcmp(strSection,token)){
-      // token is the section .. token found in the string
-      // form the left side of the string, target is still on the left of the token
-      size_t leftLen = strlen(toSplit)-strlen(target);
-      *left = realloc(*left,leftLen+1);
-      memset(*left,0,leftLen+1);
-      memcpy(*left,toSplit,leftLen);
-      target += tokenSz;//target is now at the end of the token
-      if(rightClip<=0){rightClip = strlen(target);}
-      *right = realloc(*right,rightClip+1);
-      memset(*right,0,rightClip+1);
-      memcpy(*right,target,rightClip);
-      // now forming the clipped result
-      break;
-    }
-    // Moving to next section
-    //move on the string being searched from the next character onwards to section length
-    free(strSection);
-    target++;
-  }
-  return 0;
-}
+
 void test_post_requests(){
-  char url[strlen(baseUrl)+strlen("api/uplink/devices/")+2];
+  char url[strlen(baseUrl)+strlen("api/uplink/devices/")+1];
   sprintf(url, "%s%s",baseUrl,"api/uplink/devices/");
-  DeviceDetails dd={"Hinjawadi Phase1","RPi3B+","Measuring the ambient conditions"};
+  /*forming the json payload for post
+  Please be careful  here : if the device details is formed using the initilizer
+  then it leads to a segentation fault since it has 4 fields and only
+  3 are initilized*/
+  DeviceDetails dd;
+  dd.location ="Hinjawadi Phase1, Pune 57";
+  dd.type = "RPi3B+";
+  dd.duty = "Measuring ambient conditions";
   KeyValuePair payload[] ={
-    {"location",dd.location, jsonify_strfield},
     {"type",dd.type, jsonify_strfield},
     {"duty",dd.duty, jsonify_strfield},
+    {"location",dd.location, jsonify_strfield},
   };
   int ok =0;
   char* jsonPayload  = json_serialize(payload, 3, &ok);
+  printf("Json payload formed \n%s\n",jsonPayload);
+  assert(ok==0);
+  assert(strcmp(jsonPayload, "")!=0);
+  assert(jsonPayload !=NULL);
   char* content = malloc(0);
   long rCode = 0;
   ok =0;
-  assert(strcmp(jsonPayload, "")!=0);
-  assert(jsonPayload !=NULL);
   printf("We are about to hit the url :\n%s\n", url);
   long bytesRecv= url_post(url, jsonPayload, &content , &rCode, &ok);
   // we need to then find out the content that we have received
@@ -125,9 +100,16 @@ void test_post_requests(){
   assert(strcmp(content, "")!=0);
   printf("%s\n",content);
   // lets see if can really de-serialize the content from th received
-
+  // We know the uuid of the device is 36 characters long
+  char * left = malloc(0);
+  char* right = malloc(0);
+  printf("%s\n", content);
+  if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
+    dd.uuid = right;
+    printf("UUID of the newly posted device \n%s\n", dd.uuid);
+  }
 }
-int main(int argc, char const *argv[]) {
+void test_string_split(){
   DeviceDetails dd={"Hinjawadi Phase1","RPi3B+","Measuring the ambient conditions","0513ea9a-a8b3-4300-bd29-dbbca89cc781"};
   KeyValuePair payload[] ={
     {"type",dd.type, jsonify_strfield},
@@ -140,8 +122,21 @@ int main(int argc, char const *argv[]) {
   char* left  = malloc(0);
   char* right = malloc(0);
   printf("%s\n", jsonPayload);
-  int result = splitstr_token(jsonPayload ,"\"uuid\": \"", &left, &right, 36);
-  printf("%s\n",left);
-  printf("%s\n",right);
+  if (splitstr_token(jsonPayload ,"\"chutya\": \"", &left, &right, 36) !=0) {
+    printf("%s\n",left);
+    printf("%s\n",right);
+  }
+  else{printf("Failed to spot the token in the string\n");}
+}
+int main(int argc, char const *argv[]) {
+  DeviceDetails dd;
+  dd.location ="Hinjawadi Phase1, Pune 57";
+  dd.type = "RPi3B+";
+  dd.duty = "Measuring ambient conditions";
+  // TODO: test this with empty strings on device details.
+  // TODO: incorrect base url  - lets see if that works
+  if(register_device(&dd,baseUrl) ==0){
+    printf("We have posted the new device details\n%s\n",dd.uuid);
+  }
   return 0;
 }
