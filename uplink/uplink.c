@@ -330,19 +330,18 @@ returns 0 on success and negative on failure
 int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
   char url[strlen(baseUrl)+strlen(DEVICES_URL)+1]; //complete url
   sprintf(url, "%s%s",baseUrl,DEVICES_URL); //making the complete  url
-  char* content = malloc(1); // this the body of the response
-  memset(content,0, strlen(content)); //setting the body of response to ""
+  char* content = malloc(sizeof(char)); // this the body of the response
+  // memset(content,0, strlen(content)); //setting the body of response to ""
   long response_code = 0; // HTTP response code
   int ok =0; //this function overall status
-  char * left = malloc(1); //response body fragment left
-  char* right = malloc(1); //response body fragment right
-  char* jsonPayload  = malloc(1);
+  char * left = (char*)malloc(sizeof(char)); //response body fragment left
+  char* right = (char*)malloc(sizeof(char)); //response body fragment right
+  char* jsonPayload  = (char*)malloc(sizeof(char));
   *uuid = (char*)malloc(sizeof(char)*1);  // preparing the output
   if (to_json(payload, 3, &jsonPayload)!=0){
     fprintf(stderr, "Failed to formulate the json object \n");
     return -1;
   };
-  // TODO : we need to turn this into a function that returns int for the normlization
   long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
   if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
     printf("Response code is %d\n",response_code );

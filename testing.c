@@ -112,7 +112,7 @@ This is to figure out what excatly is the problem that bugging url_get*/
 // }
 // // NOTE: how to design a simple system that can give us a simple jsonification system
 
-int main(int argc, char const *argv[]) {
+void test_to_json(){
   KeyValuePair payload[] ={
     {"type","RPi3B", jsonify_strfield},
     {"duty","Ambient conditions monitoring", jsonify_strfield},
@@ -147,4 +147,19 @@ int main(int argc, char const *argv[]) {
   json = (char*)malloc(1);
   result  = to_json(invalidPayload,4,&json);
   printf("%s\n",json);
+}
+int main(int argc, char const *argv[]) {
+  KeyValuePair payload[] ={
+    {"type","RPi3B", jsonify_strfield},
+    {"duty","Ambient conditions monitoring", jsonify_strfield},
+    {"uuid","a99745ad-9f17-45e6-83ac-c00d5e06b8c4", jsonify_strfield},
+    {"location","Kothrud Pune 38", jsonify_strfield},
+  };
+  char* uuid  = malloc(sizeof(char));
+  if (register_device(payload,baseUrl, &uuid)!=0) {
+    fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
+    return -1;
+  }
+  printf("%s\n","Success in posting the device to the database");
+  printf("%s\n", uuid);
 }
