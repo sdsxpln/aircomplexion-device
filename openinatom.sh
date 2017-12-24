@@ -4,8 +4,4 @@
 # this was a shell script just to open the entire folder and requisite files in eatom on the local machine
 
 echo "opening code files in atom, please keep atom remote server running .."
-ratom device.c
-# ratom device-service.c
-rtaom ./mq7/mq7.*
-ratom testing.c
-ratom build.sh
+ratom testing.c ./uplink/uplink.c ./uplink/uplink.h Makefile

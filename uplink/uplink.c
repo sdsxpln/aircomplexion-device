@@ -1,4 +1,5 @@
 #include "uplink.h"
+
 // you can reference some example from here
 // post data example https://gist.github.com/jay/2a6c54cc6da442489561
 // size_t writeFunction(void *ptr, size_t size, size_t nmemb, std::string* data) {
@@ -208,56 +209,42 @@ unsigned short has_duplicate_keys(KeyValuePair arr[], unsigned int sz){
   }
   return 0;
 }
-char* json_serialize(KeyValuePair payload[], unsigned int fields, int* ok){
-  *ok  = 0;
-  char* json_string  = malloc(0);
-  char* result = malloc(0);
-  char* json_result = malloc(0);
-  memset(json_string,0,strlen(json_string)); //dont miss this out
-  memset(result,0,strlen(result)); //dont miss this out
-  memset(json_result,0,strlen(json_result)); //dont miss this out
-  size_t i = 0;
-  if(0!=has_duplicate_keys(payload, fields)){
-    fprintf(stderr, "Invalid Json Object : found duplicate fields \n");
-    *ok =-1;
-    return "";
-  }
-  for (i = 0; i < fields; i++) {
-    // only if we have a valid key
-    if(0!=strcmp(payload->key, "") && payload->Jsonify != NULL){
-      // getting the json string of the field
-      char* appendix = payload->Jsonify(payload->key, payload->strValue);
-      json_string = realloc(json_string,strlen(appendix)+strlen(json_string)+1);
-      if (json_string == NULL) {
-        fprintf(stderr, "Out of memory\n");
-        *ok  = -1;
-        return "";
-      }
-      memcpy(json_string+strlen(json_string),appendix,strlen(appendix));
-    }
-    payload++; //moving to the next field
-  }
-  printf("%s\n",json_string);
-  // here we make that a object from the string that it is
-  result = realloc(result, strlen(json_string)) ;
+int to_json(KeyValuePair payload[], int fields ,char** json){
+  size_t i =0;
+  char* lDelim = "{";
+  char* result = (char*)malloc(2*sizeof(char)); //<< 2*sizeof(char), dont use strlen(lDelim)+1 - the character may not be one byte always
   if (result == NULL) {
-    fprintf(stderr, "Out of memory\n");
-    *ok  = -1;
-    return "";
+    fprintf(stderr, "%s\n", "Out of memory , Cannot convert to json");
+    return -1;
   }
-  memcpy(result, json_string, strlen(json_string)-1);
-  json_result = realloc(json_result,strlen(result)+3);
-  if (json_result == NULL) {
-    fprintf(stderr, "Out of memory\n");
-    *ok  = -1;
-    return "";
+  memcpy(result, lDelim, strlen(result));
+  for (i = 0; i < fields; i++) {
+    if (strcmp(payload->key, "")!=0 && strcmp(payload->strValue, "")!=0) {
+      char* fieldsAsJson  = payload->Jsonify(payload->key, payload->strValue);
+      result = (char*)realloc(result, strlen(result)+strlen(fieldsAsJson)+1);
+      memcpy(result+strlen(result),fieldsAsJson,strlen(fieldsAsJson));
+    }
+    payload++;
   }
-  sprintf(json_result,"{%s}", result);
-  printf("%s\n",json_result);
-  // printf("%s\n",json_result);
-  // free(json_string);
-  // free(result);
-  return json_result;
+  // now to remove the leading ',' and add the rDelim character
+  if (strlen(result)>1) {
+    /*we want to carry this operation when in general cases where we have the happy path
+    the case where the json object is not empty*/
+    char* temp = result;
+    while(*temp!='\0'){temp++;}
+    *(temp-1)='}';//<< replacing the last ',' with delimiting '}'
+  }
+  else{
+    /*case when we have the json empty object*/
+    result = realloc(result, 2*sizeof(char)+1) ;
+    memcpy(result,"{}",strlen("{}"));
+  }
+  *json = realloc(*json, strlen(result)+1);
+  *json  = strdup(result);
+  // Never free result, despite beig allocated here
+  // strdup() is shallow duplication and the same memory is being referenced outside
+  // some delta change
+  return 0;
 }
 /*if you want to know how to debug
 http://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Debugging.html*/
@@ -311,29 +298,6 @@ int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rig
   }
   else{return 1;}
 }
-int main_test(int argc, char const *argv[]) {
-  KeyValuePair payload[] ={
-    {"location","Kothrud Pune 38",jsonify_strfield},
-    {"duty","Measure air pollutants",jsonify_strfield},
-    {"type","RPi3B+ but not sure of the version",jsonify_strfield},
-    {"random","1000",jsonify_numfield},
-    {"license","true",jsonify_boolfield}
-  };
-  // unsigned short  result  =has_duplicate_keys(payload, 4);
-  // printf("We have the result to be  : %d\n", result);
-  int ok  = 0;
-  char* json  = json_serialize(payload, 5, &ok);
-  if (ok!=0) {
-    fprintf(stderr, "failed serialization\n");
-  }
-  else{
-    printf("%s\n",json);
-  }
-  // // printf("%s\n",json);
-  // // printf("%s\n",result);
-  // char url[]= "http://192.168.1.5:8038/api/uplink/devices/";
-  // long rcode =url_post(url,json);
-}
 /* Quick check if device is found registered at the url
 Returns         :0 if not found, 1 if found, -1 if an eror
 baseUrl         :http://192.168.1.5:8038/ is the server port and ip
@@ -357,8 +321,13 @@ int is_device_registered(char* baseUrl, char* uuid){
   }
   return -1;
 }
-int register_device(DeviceDetails* dd, char* baseUrl){
-
+/*This enables the registry of the new device
+payload       :the device details as an array of KeyValuePair
+baseUrl       :baseUrl that needs to be hit
+uuid          :the uuid of the newly registered device
+returns 0 on success and negative on failure
+*/
+int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
   char url[strlen(baseUrl)+strlen(DEVICES_URL)+1]; //complete url
   sprintf(url, "%s%s",baseUrl,DEVICES_URL); //making the complete  url
   char* content = malloc(1); // this the body of the response
@@ -367,52 +336,35 @@ int register_device(DeviceDetails* dd, char* baseUrl){
   int ok =0; //this function overall status
   char * left = malloc(1); //response body fragment left
   char* right = malloc(1); //response body fragment right
-  // quit the function as early as possible
-  if(!dd){return -1;}
-  // we for now know there are 3 fields that make up device DeviceDetails
-  // except the uuid - which is device identification
-  if (strcmp(dd->location,"")==0 || 0==strcmp(dd->type,"") || 0==strcmp(dd->duty, "")) {
-    /*exit earyl in case of invalid inputs*/
-    fprintf(stderr, "Device details are invalid for the device to be registered\n");
+  char* jsonPayload  = malloc(1);
+  *uuid = (char*)malloc(sizeof(char)*1);  // preparing the output
+  if (to_json(payload, 3, &jsonPayload)!=0){
+    fprintf(stderr, "Failed to formulate the json object \n");
     return -1;
-  }
-  KeyValuePair payload[] ={
-    {"location",dd->location, jsonify_strfield},
-    {"type",dd->type, jsonify_strfield},
-    {"duty",dd->duty, jsonify_strfield},
   };
-  // this payload now needs to seriliazed
-  char* jsonPayload  = json_serialize(payload, 3, &ok);
-  printf("Debug point\n");
-  if(ok==0){
-    long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
-    printf("Error response from the server :\n%s\n",content);
-    if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
-      printf("Response code is %d\n",response_code );
-      if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
-        if(0!=strcmp(right,"")){
-          printf("%s\n", right);
-          dd->uuid  = realloc(dd->uuid, strlen(right)+1);
-          memcpy(dd->uuid, right,strlen(right));
-          return 0;
-        }
-        else{
-          fprintf(stderr, "Could not get the uuid of the newly posted device, Device may have been posted\n");
-          return -1;
-        }
+  // TODO : we need to turn this into a function that returns int for the normlization
+  long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
+  if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
+    printf("Response code is %d\n",response_code );
+    if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
+      if(0!=strcmp(right,"")){
+        // printf("%s\n", right);
+        *uuid  = realloc(*uuid,strlen(right)+1);
+        memcpy(*uuid, right, strlen(right));
+        return 0;
       }
       else{
-        fprintf(stderr, "Device might have been posted, error parsing response from the server\n");
+        fprintf(stderr, "Could not get the uuid of the newly posted device, Device may have been posted\n");
         return -1;
       }
     }
     else{
-      fprintf(stderr, "Failed server request to post the new device details \n");
+      fprintf(stderr, "Device might have been posted, error parsing response from the server\n");
       return -1;
     }
   }
   else{
-    fprintf(stderr, "Failed jsonification of the payload \n");
+    fprintf(stderr, "Failed server request to post the new device details \n");
     return -1;
   }
   return 0;
