@@ -211,36 +211,39 @@ unsigned short has_duplicate_keys(KeyValuePair arr[], unsigned int sz){
 }
 int to_json(KeyValuePair payload[], int fields ,char** json){
   size_t i =0;
-  char* lDelim = "{";
-  char* result = (char*)malloc(2*sizeof(char)); //<< 2*sizeof(char), dont use strlen(lDelim)+1 - the character may not be one byte always
-  if (result == NULL) {
-    fprintf(stderr, "%s\n", "Out of memory , Cannot convert to json");
-    return -1;
-  }
-  memcpy(result, lDelim, strlen(result));
+  char* lDelim = "{"; //left most delimiting character
+  char* buff = realloc(*json, strlen(lDelim)+1);
+  if(!buff){perror("Failed memory allocation, out of memory");return -1;}
+  else{*json = buff;}
+  memcpy(*json, lDelim, strlen(lDelim)+1);
+  // printf("%s\n", *json);
   for (i = 0; i < fields; i++) {
     if (strcmp(payload->key, "")!=0 && strcmp(payload->strValue, "")!=0) {
       char* fieldsAsJson  = payload->Jsonify(payload->key, payload->strValue);
-      result = (char*)realloc(result, strlen(result)+strlen(fieldsAsJson)+1);
-      memcpy(result+strlen(result),fieldsAsJson,strlen(fieldsAsJson));
+      buff= (char*)realloc(*json, strlen(*json)+strlen(fieldsAsJson)+1);
+      if(!buff){perror("Failed to allocate memory , out of memeory "); return -1;}
+      else{*json = buff;}
+      memcpy(*json+strlen(*json),fieldsAsJson,strlen(fieldsAsJson)+1);
     }
     payload++;
   }
   // now to remove the leading ',' and add the rDelim character
-  if (strlen(result)>1) {
+  if (strlen(*json)>1) {
     /*we want to carry this operation when in general cases where we have the happy path
     the case where the json object is not empty*/
-    char* temp = result;
+    char* temp = *json;
     while(*temp!='\0'){temp++;}
     *(temp-1)='}';//<< replacing the last ',' with delimiting '}'
   }
   else{
     /*case when we have the json empty object*/
-    result = realloc(result, 2*sizeof(char)+1) ;
-    memcpy(result,"{}",strlen("{}"));
+    buff = realloc(*json, 2*sizeof(char)+1) ;
+    if(!buff){perror("failed to allocate memory, out of memory"); return -1;}
+    else{*json = buff;}
+    memcpy(*json,"{}",strlen("{}")+1);
   }
-  *json = realloc(*json, strlen(result)+1);
-  *json  = strdup(result);
+  // *json = realloc(*json, strlen(result)+1);
+  // *json  = strdup(result);
   // Never free result, despite beig allocated here
   // strdup() is shallow duplication and the same memory is being referenced outside
   // some delta change
@@ -306,8 +309,7 @@ int is_device_registered(char* baseUrl, char* uuid){
   if(strcmp(uuid, "")==0 || 0==strcmp(baseUrl, "")){return -1;}
   char url[strlen(baseUrl)+strlen(DEVICES_URL)+strlen(uuid)+2];
   sprintf(url, "%s%s%s/",baseUrl,DEVICES_URL,uuid);
-  char* content = (char*)malloc(0);
-  memset(content,0,strlen(content));
+  char* content = (char*)malloc(sizeof(char));
   long response = 0;
   int ok  =0;
   long bytes_received = url_get(url,&content,&response,&ok);
@@ -316,9 +318,10 @@ int is_device_registered(char* baseUrl, char* uuid){
     return -1;
   }
   else{
-    if(0==strcmp(content,"")){return 0;}
-    else{return 1;}
+    if(0==strcmp(content,"")){free(content);return 0;}
+    else{free(content);return 1;}
   }
+  free(content);
   return -1;
 }
 /*This enables the registry of the new device
@@ -337,11 +340,11 @@ int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
   char * left = (char*)malloc(sizeof(char)); //response body fragment left
   char* right = (char*)malloc(sizeof(char)); //response body fragment right
   char* jsonPayload  = (char*)malloc(sizeof(char));
-  *uuid = (char*)malloc(sizeof(char)*1);  // preparing the output
   if (to_json(payload, 3, &jsonPayload)!=0){
     fprintf(stderr, "Failed to formulate the json object \n");
     return -1;
   };
+  printf("register_device:\n %s\n",jsonPayload);
   long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
   if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
     printf("Response code is %d\n",response_code );
@@ -349,7 +352,7 @@ int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
       if(0!=strcmp(right,"")){
         // printf("%s\n", right);
         *uuid  = realloc(*uuid,strlen(right)+1);
-        memcpy(*uuid, right, strlen(right));
+        memcpy(*uuid, right, strlen(right)+1);
         return 0;
       }
       else{

@@ -18,7 +18,7 @@ char* testUuids[]={
   "18fb811d-1f93-435a-b581-39f93ae99ff0",
   "a99745ad-9f17-45e6-83ac-c00d5e06b8c4"
 };
-char* baseUrl  = "http://192.168.1.5:8038/";
+
 /*We had observed problems in url:
 When the device uuid which were present in the databse were fired first url_get gave an error on the second hit saying Segmentatio fault.
 This is to figure out what excatly is the problem that bugging url_get*/
@@ -111,8 +111,8 @@ This is to figure out what excatly is the problem that bugging url_get*/
 //   else{printf("Failed to spot the token in the string\n");}
 // }
 // // NOTE: how to design a simple system that can give us a simple jsonification system
-
 void test_to_json(){
+  printf("%s\n","-----------New function call to to_json---------------");
   KeyValuePair payload[] ={
     {"type","RPi3B", jsonify_strfield},
     {"duty","Ambient conditions monitoring", jsonify_strfield},
@@ -131,10 +131,12 @@ void test_to_json(){
     {"","Measuremen of ambient air conditions", jsonify_strfield},
     {"","Some uuid", jsonify_strfield},
   };
-  char* json = (char*)malloc(1);
+  char* json = (char*)malloc(sizeof(char)+1);
+  memset(json, 0, strlen(json));
   int result=0;
   result  = to_json(payload,4,&json);
   printf("%s\n",json);
+  free(json);
   // result  = to_json(payload_1,4,&json);
   // printf("%s\n",json);
   //
@@ -142,24 +144,59 @@ void test_to_json(){
   // // json = (char*)malloc(1);
   // result  = to_json(emptyPayload,4,&json);
   // printf("%s\n",json);
-
   printf("And as for the invalid payload where keys are absent : \n");
-  json = (char*)malloc(1);
+  json = (char*)malloc(sizeof(char)+1);
+  memset(json, 0, strlen(json));
   result  = to_json(invalidPayload,4,&json);
   printf("%s\n",json);
+  free(json);
 }
 int main(int argc, char const *argv[]) {
+  char* baseUrl  = "http://192.168.1.5:8038/";
+  char* oldUUID  = "a99745ad-9f17-45e6-83ac-c00d5e06b8c4";
+  char* uuid  = (char*)malloc(sizeof(char));
+  KeyValuePair invalidPayload [] ={
+    {"","Kothrud Pune 38", jsonify_strfield},
+    {"","RPi3B", jsonify_strfield},
+    {"","Measuremen of ambient air conditions", jsonify_strfield},
+    {"","Some uuid", jsonify_strfield},
+  };
   KeyValuePair payload[] ={
     {"type","RPi3B", jsonify_strfield},
     {"duty","Ambient conditions monitoring", jsonify_strfield},
     {"uuid","a99745ad-9f17-45e6-83ac-c00d5e06b8c4", jsonify_strfield},
     {"location","Kothrud Pune 38", jsonify_strfield},
   };
-  char* uuid  = malloc(sizeof(char));
-  if (register_device(payload,baseUrl, &uuid)!=0) {
-    fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
-    return -1;
+  if (is_device_registered(baseUrl, oldUUID)==0) {
+    // Try to register device if the with the oldUUID there is nodevice
+    if (register_device(payload,baseUrl, &uuid)!=0) {
+      fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
+      return -1;
+    }
+    printf("%s\n","Success in posting the device to the database");
+    printf("%s\n", uuid);
+    // testing if the device registry works with the uuid that we have
+    if (is_device_registered(baseUrl,uuid)==1) {
+      printf("%s\n","Found the device registered just a while back" );
+    }
+    else{
+      printf("%s\n", "Failed to find the device that was registered");
+    }
   }
-  printf("%s\n","Success in posting the device to the database");
-  printf("%s\n", uuid);
+  // test_to_json();
+  // test_to_json();
+  // KeyValuePair* payload = malloc(sizeof(KeyValuePair)*4);
+  // char* json = (char*)malloc(sizeof(char));
+  // int result=0;
+  // result  = to_json(payload,4,&json);
+  // printf("%s\n",json);
+  // // Now trying to post the invalid json
+  // uuid  = malloc(sizeof(char));
+  // if (register_device(invalidPayload,baseUrl, &uuid)!=0) {
+  //   fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
+  //   return -1;
+  // }
+  // printf("%s\n","Success in posting the device to the database");
+  // printf("%s\n", uuid);
+  return 0;
 }
