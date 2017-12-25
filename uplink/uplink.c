@@ -151,23 +151,22 @@ int url_post(char* url, char* payload, char** content , long* response_code, lon
     // curl_global_cleanup();
   return ok;
 }
-long url_get(char* url, char** content,long* response,int* ok){
-  *ok  = 0; //at the onset everything is ok
+int url_get(char* url, char** content,long* response_code,long* bytesRecv){
+  int ok  = 0; //at the onset everything is ok
   CURL *curl;
   CURLcode res;
+  *bytesRecv = 0L;
+  *response_code =0L;
+  /*write back  structure prepared*/
   struct MemoryStruct chunk;
-  chunk.memory = malloc(0);  /* will be grown as needed by the realloc above */
+  chunk.memory = malloc(sizeof(char));  /* will be grown as needed by the realloc above */
   memset(chunk.memory, 0, strlen(chunk.memory));
   chunk.size = 0;    /* no data at this point */
-  curl = curl_easy_init();
+
   char error_buf[CURL_ERROR_SIZE];
-  if(!curl){
-    // is the case when we could not init the curl pointer itself
-    fprintf(stderr, "failed to instantiate the CURL client");
-    *ok  = -1;
-    goto cleanup;
-  }
-  /* send all data to this function
+  curl = curl_easy_init();
+  if(!curl){perror("failed to instantiate the CURL client");ok  = -1;goto cleanup;}
+  /*
   read more on the write function here :
   https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html*/
   curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -181,8 +180,9 @@ long url_get(char* url, char** content,long* response,int* ok){
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
   if(res = curl_easy_perform(curl) != CURLE_OK){
     fprintf(stderr, "We have error response from the server :%d\n", res);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
-    // printf("We have response code %ld from the server\n", *response);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
+    ok =0;
+    *bytesRecv = strlen(error_buf);
     goto cleanup;
   }
   else {
@@ -190,23 +190,26 @@ long url_get(char* url, char** content,long* response,int* ok){
     from the server then chunk.memory would contain 'null' literal string ,
     we are just making sure that we send NULL response when such a case occurs
     If chunk.memory == "null" then contents == NULL*/
-   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response);
+   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
    if(0!=strcmp(chunk.memory, "null")){
     //  this would send back not empty string outside
     // please use strcmp(content, "")!=0 to know if there is content
      *content = realloc(*content,strlen(chunk.memory)+1);
-     memcpy(*content,chunk.memory, strlen(chunk.memory));
+     memcpy(*content,chunk.memory, strlen(chunk.memory)+1);
+     ok =0;
+     *bytesRecv = chunk.size;
      goto cleanup;
    }
    else{
     //  this would send back empty string
     // please strcmp(content, "") to know if there is content or not
      memset(*content,0,strlen(*content));
+     ok =0;
    }
   }
   cleanup:
     curl_easy_cleanup(curl);
-  return chunk.size;
+  return ok;
 }
 unsigned short has_duplicate_keys(KeyValuePair arr[], unsigned int sz){
   // this function just returns if the there are 2 or more keys that have duplicate values
@@ -326,18 +329,18 @@ int is_device_registered(char* baseUrl, char* uuid){
   sprintf(url, "%s%s%s/",baseUrl,DEVICES_URL,uuid);
   char* content = (char*)malloc(sizeof(char));
   long response = 0;
-  int ok  =0;
-  long bytes_received = url_get(url,&content,&response,&ok);
-  if (ok!=0 || response!=200) {
-    fprintf(stderr, "Failed request to find device registration\n");
-    return -1;
+  long bytesRecv = 0L;
+  if(url_get(url,&content,&response,&bytesRecv)==0){
+    if (response!=200) {
+      fprintf(stderr, "Failed request to find device registration\n");
+      return -1;
+    }
+    else{
+      if(0==strcmp(content,"")){free(content);return 0;}
+      else{free(content);return 1;}
+    }
   }
-  else{
-    if(0==strcmp(content,"")){free(content);return 0;}
-    else{free(content);return 1;}
-  }
-  free(content);
-  return -1;
+  else{free(content);return -1;}
 }
 /*This enables the registry of the new device
 payload       :the device details as an array of KeyValuePair

@@ -47,6 +47,6 @@ int to_json(KeyValuePair payload[], int fields ,char** json);
 int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip);
 int url_post(char* url, char* payload, char** content , long* response_code, long* bytesRecv);
 /*since content is double indirection it means it is output  - light bulb moment for me :)*/
-long url_get(char* url,char** content,long* response,int* ok);
+int url_get(char* url, char** content,long* response_code,long* bytesRecv);
 int is_device_registered(char* baseUrl,  char* uuid);
 #endif
