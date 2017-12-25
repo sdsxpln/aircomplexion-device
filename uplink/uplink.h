@@ -30,6 +30,7 @@ typedef struct structdevicedetails{
 }DeviceDetails;
 // this gives the rel url ahead of the base url to get the list of devices
 #define DEVICES_URL "api/uplink/devices/"
+
 /* functions to jsoify a single field in the given key value pair
 key         : is the name of the key of the field
 value       : is the value of the field under that key*/
@@ -49,4 +50,5 @@ int url_post(char* url, char* payload, char** content , long* response_code, lon
 /*since content is double indirection it means it is output  - light bulb moment for me :)*/
 int url_get(char* url, char** content,long* response_code,long* bytesRecv);
 int is_device_registered(char* baseUrl,  char* uuid);
+int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid);
 #endif

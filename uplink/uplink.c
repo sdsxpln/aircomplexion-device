@@ -406,3 +406,42 @@ int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
   }
   return 0;
 }
+/*This function woudl assist in posting the conditions to a url of the device
+payload       :this is contains the values for all the params of the ambient conditions
+baseUrl       :this is the server base url
+uuid          :uuid of the device against which the conditions have to be posted
+*/
+int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid){
+  if (payload) {
+    /*how do in know how many fields I have ?
+    We know there are about 4 params here co , co2,temp , light
+    If there is a change in the number of params being submitted it would then
+    mean we would need to make changes here*/
+    char* jsonPayload  = (char*)malloc(sizeof(char));
+    memset(jsonPayload, 0, strlen(jsonPayload));
+    if (to_json(payload, 4, &jsonPayload)!=0){
+      fprintf(stderr, "%s\n", "Failed jsonification of the payload, exiting");
+      return -1;
+    }
+    if (0==strcmp(baseUrl,"") || 0==strcmp(uuid,"")) {
+      fprintf(stderr, "%s\n", "Invalid url, cannot upload conditions");
+      return -1;
+    }
+    char url[strlen(baseUrl)+strlen(DEVICES_URL)+strlen(uuid)+strlen("/pings/")+1];
+    sprintf(url,"%s%s%s/pings/",baseUrl,DEVICES_URL,uuid);
+    // once we have the url  - we need to post the payl to the api
+    char* content  = (char*)malloc(sizeof(char));
+    long response_code = 0L, bytesRecv = 0L;
+    if(url_post(url,jsonPayload, &content , &response_code, &bytesRecv)!=0){
+      fprintf(stderr, "%s\n", "Failed post procedure, exiting now");
+      return -1;
+    }
+    if (response_code !=200) {
+      fprintf(stderr, "We have received %d bytes from server response\n", bytesRecv);
+      fprintf(stderr, "%s\n", "Error response from the server , failed to post pings for the device");
+      return 2;
+    }
+  }
+  else{return -1;}
+  return 0;
+}

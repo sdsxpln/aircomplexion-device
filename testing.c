@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include"./uplink/uplink.h"
 #include<assert.h>
+#include <sys/time.h>
 
 char* testUuids[]={
   "b0d90dee-b228-42b3-aa7b-e7e9850549a8",
@@ -111,6 +112,13 @@ This is to figure out what excatly is the problem that bugging url_get*/
 //   else{printf("Failed to spot the token in the string\n");}
 // }
 // // NOTE: how to design a simple system that can give us a simple jsonification system
+long long current_timestamp() {
+    struct timeval te;
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+    // printf("milliseconds: %lld\n", milliseconds);
+    return milliseconds;
+}
 void print_testing_header(char* header){
     printf("%s\n","-----------------------------------------");
     printf("%s\n",header);
@@ -188,7 +196,23 @@ void test_register_device(){
     printf("%s\n", "Failed to find the device that was registered");
   }
 }
+void test_ping_conditions(){
+  char* currTime = malloc(sizeof(char));
+  sprintf(currTime,"%lld",current_timestamp());
+  KeyValuePair payl[] = {
+    {"tm",currTime, jsonify_numfield},
+    {"temp", "28.5", jsonify_numfield},
+    {"light", "0.65", jsonify_numfield},
+    {"co2", "402.72", jsonify_numfield},
+    {"co", "0.6", jsonify_numfield}
+  };
+  char* deviceuuid  = "139a8690-1595-4692-9ea5-3021a5b1524c";
+  assert(ping_conditions(payl,baseUrl,deviceuuid)==0);
+}
 int main(int argc, char const *argv[]) {
-  test_is_device_registered();
+  // test_is_device_registered();
+  test_ping_conditions();
+  // test_register_device();
+  // http://192.168.1.5:8038/api/uplink/devices/139a8690-1595-4692-9ea5-3021a5b1524c/pings/
   return 0;
 }
