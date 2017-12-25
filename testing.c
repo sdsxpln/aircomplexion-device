@@ -167,36 +167,36 @@ int main(int argc, char const *argv[]) {
     {"uuid","a99745ad-9f17-45e6-83ac-c00d5e06b8c4", jsonify_strfield},
     {"location","Kothrud Pune 38", jsonify_strfield},
   };
-  if (is_device_registered(baseUrl, oldUUID)==0) {
-    // Try to register device if the with the oldUUID there is nodevice
-    if (register_device(payload,baseUrl, &uuid)!=0) {
-      fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
-      return -1;
-    }
+  if (register_device(payload,baseUrl, &uuid)==0) {
     printf("%s\n","Success in posting the device to the database");
     printf("%s\n", uuid);
     // testing if the device registry works with the uuid that we have
     if (is_device_registered(baseUrl,uuid)==1) {
       printf("%s\n","Found the device registered just a while back" );
     }
-    else{
-      printf("%s\n", "Failed to find the device that was registered");
-    }
   }
-  // test_to_json();
-  // test_to_json();
-  // KeyValuePair* payload = malloc(sizeof(KeyValuePair)*4);
-  // char* json = (char*)malloc(sizeof(char));
-  // int result=0;
-  // result  = to_json(payload,4,&json);
-  // printf("%s\n",json);
-  // // Now trying to post the invalid json
-  // uuid  = malloc(sizeof(char));
-  // if (register_device(invalidPayload,baseUrl, &uuid)!=0) {
-  //   fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
-  //   return -1;
+  else{
+    printf("%s\n", "Failed to find the device that was registered");
+  }
+  // if (is_device_registered(baseUrl, oldUUID)==0) {
+  //   // Try to register device if the with the oldUUID there is nodevice
+  //   printf("%s\n", "Device not found registered, movig ahead to register the device");
+  //
   // }
-  // printf("%s\n","Success in posting the device to the database");
-  // printf("%s\n", uuid);
+  // // test_to_json();
+  // // test_to_json();
+  // // KeyValuePair* payload = malloc(sizeof(KeyValuePair)*4);
+  // // char* json = (char*)malloc(sizeof(char));
+  // // int result=0;
+  // // result  = to_json(payload,4,&json);
+  // // printf("%s\n",json);
+  // // // Now trying to post the invalid json
+  // // uuid  = malloc(sizeof(char));
+  // // if (register_device(invalidPayload,baseUrl, &uuid)!=0) {
+  // //   fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
+  // //   return -1;
+  // // }
+  // // printf("%s\n","Success in posting the device to the database");
+  // // printf("%s\n", uuid);
   return 0;
 }

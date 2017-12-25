@@ -45,7 +45,7 @@ Will not consider fields that are empty so expect an empty string if the key of 
 
 int to_json(KeyValuePair payload[], int fields ,char** json);
 int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rightClip);
-long url_post(char* url, char* payload, char** content , long* response_code, int* ok);
+int url_post(char* url, char* payload, char** content , long* response_code, long* bytesRecv);
 /*since content is double indirection it means it is output  - light bulb moment for me :)*/
 long url_get(char* url,char** content,long* response,int* ok);
 int is_device_registered(char* baseUrl,  char* uuid);

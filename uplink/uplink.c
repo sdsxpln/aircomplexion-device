@@ -77,7 +77,7 @@ references/notes
 default bahaviour of CURL is to give CURLE_OK despite non 200 OK return codes
 this mandates the curl to emit an error if thhe error from the server is returned
 */
-long url_post(char* url, char* payload, char** content , long* response_code, int* ok){
+long url_post_0(char* url, char* payload, char** content , long* response_code, int* ok){
   ok = 0;
   CURL* curl;
   CURLcode response = CURLE_OK;
@@ -135,6 +135,79 @@ long url_post(char* url, char* payload, char** content , long* response_code, in
     curl_easy_cleanup(curl);
     // curl_global_cleanup();
   return bytesRecv;
+}
+int url_post(char* url, char* payload, char** content , long* response_code, long* bytesRecv){
+  int ok = 0; // overall status of the function performance
+  CURL* curl; // curl handle
+  CURLcode response = CURLE_OK; // curl response
+  *bytesRecv =0L;
+  *response_code = 0L;
+  char* buff  = realloc(*content,sizeof(char));
+  if (!buff) {perror("Failed to allocate memory, out of memory");return -1;}
+  else{
+    *content = buff;
+    memset(*content,0,strlen(*content));
+  }
+  /*loading up the memory*/
+  struct MemoryStruct chunk;
+  chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
+  chunk.size = 0;
+  char error_buf[CURL_ERROR_SIZE];
+  curl = curl_easy_init();
+  if(!curl){
+    // is the case when we could not init the curl pointer itself
+    perror("failed to instantiate the CURL client");
+    ok =-1;
+    goto cleanup;
+  }
+  /*setting options*/
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+  curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L); //<= this is important, but not obvious
+  curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error_buf);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+  /*actually performing the curl request*/
+  response =curl_easy_perform(curl);
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
+  if (response!=CURLE_OK) {
+    printf("%s\n", "REsponse is not 200 ok");
+    fprintf(stderr, "%s\n",error_buf);
+    /*error string being copied to the content*/
+    buff = realloc(*content,strlen(error_buf)+1);
+    if(!buff){ok =-1;perror("failed to allocate memory, cannot send back content");goto cleanup;}
+    else{*content = buff;}
+    memcpy(*content,error_buf, strlen(error_buf)+1);
+    *bytesRecv = strlen(error_buf);
+    ok = 0;
+    goto cleanup;
+  }
+  else{
+    /*case when we have 200 Ok from the servr*/
+    if(*response_code ==200 || *response_code ==201){
+      printf("%s\n", "Trying to print the chunk.memory");
+      printf("%s\n", chunk.memory);
+      if(0!=strcmp(chunk.memory, "null")){
+        buff = realloc(*content, strlen(chunk.memory)+1);
+        if(!buff){perror("Failed to allocate memory, cannot send back content"); ok =-1; goto cleanup;}
+        else{*content= buff;}
+        memcpy(*content,chunk.memory, strlen(chunk.memory)+1);
+        *bytesRecv = chunk.size;
+        ok = 0;
+      }
+    }
+  }
+  // printf("CURL POST success , status code %ld\n", response_code);
+  // need to check if the response is in structure
+  // printf("We have received %d bytes in the server response \n", chunk.size);
+  // printf("%s\n", chunk.memory);
+  cleanup:
+    curl_easy_cleanup(curl);
+    // curl_global_cleanup();
+  return ok;
 }
 long url_get(char* url, char** content,long* response,int* ok){
   *ok  = 0; //at the onset everything is ok
@@ -333,40 +406,57 @@ returns 0 on success and negative on failure
 int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
   char url[strlen(baseUrl)+strlen(DEVICES_URL)+1]; //complete url
   sprintf(url, "%s%s",baseUrl,DEVICES_URL); //making the complete  url
-  char* content = malloc(sizeof(char)); // this the body of the response
   // memset(content,0, strlen(content)); //setting the body of response to ""
-  long response_code = 0; // HTTP response code
   int ok =0; //this function overall status
   char * left = (char*)malloc(sizeof(char)); //response body fragment left
   char* right = (char*)malloc(sizeof(char)); //response body fragment right
   char* jsonPayload  = (char*)malloc(sizeof(char));
-  if (to_json(payload, 3, &jsonPayload)!=0){
-    fprintf(stderr, "Failed to formulate the json object \n");
-    return -1;
-  };
-  printf("register_device:\n %s\n",jsonPayload);
-  long bytesRecv =url_post(url, jsonPayload, &content ,&response_code, &ok);
-  if (ok ==0 && response_code ==200 && 0!=strcmp(content, "")) {
-    printf("Response code is %d\n",response_code );
-    if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
-      if(0!=strcmp(right,"")){
-        // printf("%s\n", right);
-        *uuid  = realloc(*uuid,strlen(right)+1);
-        memcpy(*uuid, right, strlen(right)+1);
-        return 0;
+
+  if (to_json(payload, 3, &jsonPayload)==0){
+    printf("jsonified payload:\n %s\n",jsonPayload);
+    char* content = malloc(sizeof(char)); // this the body of the response
+    memset(content, 0,strlen(content));
+    long response_code = 0L; // HTTP response code
+    long bytesRecv =0L;
+    if (url_post(url, jsonPayload, &content ,&response_code, &bytesRecv)==0){
+      printf("Url posted away!");
+      if (response_code ==200 && 0!=strcmp(content, "")) {
+        printf("%s:%d\n","url post success",response_code);
+        if (splitstr_token(content ,"\"uuid\": \"", &left, &right, 36) !=0) {
+          if(0!=strcmp(right,"")){
+            // printf("%s\n", right);
+            char* buff = realloc(*uuid,strlen(right)+1);
+            if(!buff){
+              perror("Device details may have been posted , but could not report uuid, out of memory");
+              return -1;
+            }
+            else{*uuid = buff;}
+            memcpy(*uuid, right, strlen(right)+1);
+            return 0;
+          }
+          else{
+            fprintf(stderr, "Could not get the uuid of the newly posted device, Device may have been posted\n");
+            return -1;
+          }
+        }
+        else{
+          fprintf(stderr, "Device might have been posted, error parsing response from the server\n");
+          return -1;
+        }
       }
       else{
-        fprintf(stderr, "Could not get the uuid of the newly posted device, Device may have been posted\n");
+        fprintf(stderr, "Failed server request to post the new device details \n");
         return -1;
       }
     }
     else{
-      fprintf(stderr, "Device might have been posted, error parsing response from the server\n");
+      /*failed url_post method, no need to check response code*/
+      perror("Failed url post method");
       return -1;
     }
   }
   else{
-    fprintf(stderr, "Failed server request to post the new device details \n");
+    perror("Failed jsonification of the payload");
     return -1;
   }
   return 0;
