@@ -77,65 +77,7 @@ references/notes
 default bahaviour of CURL is to give CURLE_OK despite non 200 OK return codes
 this mandates the curl to emit an error if thhe error from the server is returned
 */
-long url_post_0(char* url, char* payload, char** content , long* response_code, int* ok){
-  ok = 0;
-  CURL* curl;
-  CURLcode response = CURLE_OK;
-  long bytesRecv =0;
-  /*loading up the memory*/
-  struct MemoryStruct chunk;
-  chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
-  chunk.size = 0;
-  memset(*content,0,strlen(*content)); // prepping the content pointer
-  char error_buf[CURL_ERROR_SIZE];
-  /*init the curl variables*/
-  curl = curl_easy_init();
-  if(!curl){
-    // is the case when we could not init the curl pointer itself
-    perror("failed to instantiate the CURL client");
-    *ok =-1; //content is ""
-    goto cleanup;
-  }
-  /*setting options*/
-  curl_easy_setopt(curl, CURLOPT_URL, url);
-  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-  curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L); //<= this is important, but not obvious
-  curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error_buf);
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
-  /*actually performing the curl request*/
-  response =curl_easy_perform(curl);
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
-  if (response!=CURLE_OK) {
-    fprintf(stderr, "%s\n",error_buf);
-    /*error string being copied to the content*/
-    *content = realloc(*content,strlen(error_buf)+1);
-    memcpy(*content,error_buf, strlen(error_buf));
-    bytesRecv = strlen(error_buf);
-    goto cleanup;
-  }
-  else{
-    /*case when we have 200 Ok from the servr*/
-    if(*response_code ==200 || *response_code ==201){
-      if(0!=strcmp(chunk.memory, "null")){
-        *content = realloc(*content, strlen(chunk.memory)+1);
-        memcpy(*content,chunk.memory, strlen(chunk.memory));
-        bytesRecv = chunk.size;
-      }
-    }
-  }
-  // printf("CURL POST success , status code %ld\n", response_code);
-  // need to check if the response is in structure
-  // printf("We have received %d bytes in the server response \n", chunk.size);
-  // printf("%s\n", chunk.memory);
-  cleanup:
-    curl_easy_cleanup(curl);
-    // curl_global_cleanup();
-  return bytesRecv;
-}
+
 int url_post(char* url, char* payload, char** content , long* response_code, long* bytesRecv){
   int ok = 0; // overall status of the function performance
   CURL* curl; // curl handle
@@ -348,7 +290,7 @@ int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rig
     char* strSection  = malloc(tokenSz+1);
     memset(strSection,0,tokenSz+1);
     memcpy(strSection,target, tokenSz);//section formed
-    printf("Substring \t\t%s\n", strSection);
+    // printf("Substring \t\t%s\n", strSection);
     if(0==strcmp(strSection,token)){
       // token is the section .. token found in the string
       // form the left side of the string, target is still on the left of the token

@@ -18,7 +18,7 @@ char* testUuids[]={
   "18fb811d-1f93-435a-b581-39f93ae99ff0",
   "a99745ad-9f17-45e6-83ac-c00d5e06b8c4"
 };
-
+char* baseUrl  = "http://192.168.1.5:8038/";
 /*We had observed problems in url:
 When the device uuid which were present in the databse were fired first url_get gave an error on the second hit saying Segmentatio fault.
 This is to figure out what excatly is the problem that bugging url_get*/
@@ -111,6 +111,11 @@ This is to figure out what excatly is the problem that bugging url_get*/
 //   else{printf("Failed to spot the token in the string\n");}
 // }
 // // NOTE: how to design a simple system that can give us a simple jsonification system
+void print_testing_header(char* header){
+    printf("%s\n","-----------------------------------------");
+    printf("%s\n",header);
+    printf("%s\n","-----------------------------------------");
+}
 void test_to_json(){
   printf("%s\n","-----------New function call to to_json---------------");
   KeyValuePair payload[] ={
@@ -137,13 +142,6 @@ void test_to_json(){
   result  = to_json(payload,4,&json);
   printf("%s\n",json);
   free(json);
-  // result  = to_json(payload_1,4,&json);
-  // printf("%s\n",json);
-  //
-  // printf("And as for the empty pay load this is what we have received \n");
-  // // json = (char*)malloc(1);
-  // result  = to_json(emptyPayload,4,&json);
-  // printf("%s\n",json);
   printf("And as for the invalid payload where keys are absent : \n");
   json = (char*)malloc(sizeof(char)+1);
   memset(json, 0, strlen(json));
@@ -151,9 +149,19 @@ void test_to_json(){
   printf("%s\n",json);
   free(json);
 }
-int main(int argc, char const *argv[]) {
-  char* baseUrl  = "http://192.168.1.5:8038/";
-  char* oldUUID  = "a99745ad-9f17-45e6-83ac-c00d5e06b8c4";
+void test_is_device_registered(){
+  char* oldUUID  = "6bf265ee-03d6-4513-8df0-14339bbd992d";
+  char* someRandomUUID  = "6410d1b0-c62e-420d-bfcd-fed87a279cb3";
+  char* failUrl = "http://192.168.1.5:8033/"; //we changed the port to make it a useless url
+  print_testing_header("is_device_registered test:");
+  printf("Now testing if device with id %s is already registered\n",oldUUID);
+  assert(is_device_registered(baseUrl,oldUUID)==1);
+  printf("Now  tetsing against a uuid that is known to be not existent \n",someRandomUUID);
+  assert(is_device_registered(baseUrl,someRandomUUID)==0);
+  printf("Now testing the against a base url that is wrong \n",oldUUID);
+  assert(is_device_registered(failUrl,oldUUID)<0);
+}
+void test_register_device(){
   char* uuid  = (char*)malloc(sizeof(char));
   KeyValuePair invalidPayload [] ={
     {"","Kothrud Pune 38", jsonify_strfield},
@@ -167,36 +175,20 @@ int main(int argc, char const *argv[]) {
     {"uuid","a99745ad-9f17-45e6-83ac-c00d5e06b8c4", jsonify_strfield},
     {"location","Kothrud Pune 38", jsonify_strfield},
   };
+  print_testing_header("register_device test : registering the device");
   if (register_device(payload,baseUrl, &uuid)==0) {
-    printf("%s\n","Success in posting the device to the database");
+    printf("%s\n",">>Success in posting the device to the database");
     printf("%s\n", uuid);
     // testing if the device registry works with the uuid that we have
     if (is_device_registered(baseUrl,uuid)==1) {
-      printf("%s\n","Found the device registered just a while back" );
+      printf("%s\n",">>Found the device registered just a while back" );
     }
   }
   else{
     printf("%s\n", "Failed to find the device that was registered");
   }
-  // if (is_device_registered(baseUrl, oldUUID)==0) {
-  //   // Try to register device if the with the oldUUID there is nodevice
-  //   printf("%s\n", "Device not found registered, movig ahead to register the device");
-  //
-  // }
-  // // test_to_json();
-  // // test_to_json();
-  // // KeyValuePair* payload = malloc(sizeof(KeyValuePair)*4);
-  // // char* json = (char*)malloc(sizeof(char));
-  // // int result=0;
-  // // result  = to_json(payload,4,&json);
-  // // printf("%s\n",json);
-  // // // Now trying to post the invalid json
-  // // uuid  = malloc(sizeof(char));
-  // // if (register_device(invalidPayload,baseUrl, &uuid)!=0) {
-  // //   fprintf(stderr, "%s\n", "Failed test for register device .. kindly check again");
-  // //   return -1;
-  // // }
-  // // printf("%s\n","Success in posting the device to the database");
-  // // printf("%s\n", uuid);
+}
+int main(int argc, char const *argv[]) {
+  test_is_device_registered();
   return 0;
 }
