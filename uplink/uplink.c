@@ -414,12 +414,12 @@ uuid          :uuid of the device against which the conditions have to be posted
 int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid){
   if (payload) {
     /*how do in know how many fields I have ?
-    We know there are about 4 params here co , co2,temp , light
+    We know there are about 5 params here co , co2,temp , light, tm
     If there is a change in the number of params being submitted it would then
     mean we would need to make changes here*/
     char* jsonPayload  = (char*)malloc(sizeof(char));
     memset(jsonPayload, 0, strlen(jsonPayload));
-    if (to_json(payload, 4, &jsonPayload)!=0){
+    if (to_json(payload, 5, &jsonPayload)!=0){
       fprintf(stderr, "%s\n", "Failed jsonification of the payload, exiting");
       return -1;
     }

@@ -119,6 +119,49 @@ long long current_timestamp() {
     // printf("milliseconds: %lld\n", milliseconds);
     return milliseconds;
 }
+/*this function helps us to get the ping object ready for post*/
+int prepare_device_ping(float temp, float light, float co, float co2, char** json){
+  // template object for the pings
+  /*Here you would notice that the values of the Key Value Pairs is by default empty strings
+  if the values in the parameters is then invalid or negative then the KeyValuePair
+  would not be included in the final json string*/
+  KeyValuePair dummy[] = {
+    {"tm","", jsonify_numfield},
+    {"temp", "", jsonify_numfield},
+    {"light", "", jsonify_numfield},
+    {"co2", "", jsonify_numfield},
+    {"co", "", jsonify_numfield}
+  };
+  int sz  = snprintf(NULL,0,"%lld",current_timestamp());
+  dummy[0].strValue  = malloc(sz+1);
+  /*remember sprintf will not work if the desination is not of exact size*/
+  sprintf(dummy[0].strValue,"%lld",current_timestamp());
+  if (temp >0.0) {
+    sz  = snprintf(NULL,0,"%.2f",temp);
+    dummy[1].strValue = malloc(sz+1);
+    sprintf(dummy[1].strValue,"%.2f", temp);
+  }
+  if (light >0.0) {
+    sz  = snprintf(NULL,0,"%.2f",light);
+    dummy[2].strValue = malloc(sz+1);
+    sprintf(dummy[2].strValue,"%.2f", light);
+  }
+  if (co2 >0.0) {
+    sz  = snprintf(NULL,0,"%.2f",co2);
+    dummy[3].strValue = malloc(sz+1);
+    sprintf(dummy[3].strValue,"%.2f", co2);
+  }
+  if (co >0.0) {
+    sz  = snprintf(NULL,0,"%.2f",co);
+    dummy[4].strValue = malloc(sz+1);
+    sprintf(dummy[4].strValue,"%.2f", co);
+  }
+  if(to_json(dummy,5,json)!=0){
+    fprintf(stderr, "%s\n","Failed jsonification of the ping");
+    return -1;
+  }
+  return 0;
+}
 void print_testing_header(char* header){
     printf("%s\n","-----------------------------------------");
     printf("%s\n",header);
@@ -210,9 +253,8 @@ void test_ping_conditions(){
   assert(ping_conditions(payl,baseUrl,deviceuuid)==0);
 }
 int main(int argc, char const *argv[]) {
-  // test_is_device_registered();
-  test_ping_conditions();
-  // test_register_device();
-  // http://192.168.1.5:8038/api/uplink/devices/139a8690-1595-4692-9ea5-3021a5b1524c/pings/
+  char* json = (char*)malloc(1);
+  prepare_device_ping(25.7,0.55,0.6, 401.8,&json);
+  printf("%s\n",json);
   return 0;
 }
