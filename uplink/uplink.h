@@ -49,6 +49,8 @@ int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rig
 int url_post(char* url, char* payload, char** content , long* response_code, long* bytesRecv);
 /*since content is double indirection it means it is output  - light bulb moment for me :)*/
 int url_get(char* url, char** content,long* response_code,long* bytesRecv);
+int deviceid_license(char** uuid);
+int update_deviceidlic(char* newid);
 int is_device_registered(char* baseUrl,  char* uuid);
 int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid);
 #endif

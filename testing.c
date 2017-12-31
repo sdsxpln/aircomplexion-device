@@ -3,6 +3,7 @@
 #include"./uplink/uplink.h"
 #include<assert.h>
 #include <sys/time.h>
+#include<string.h>
 
 char* testUuids[]={
   "b0d90dee-b228-42b3-aa7b-e7e9850549a8",
@@ -119,7 +120,12 @@ long long current_timestamp() {
     // printf("milliseconds: %lld\n", milliseconds);
     return milliseconds;
 }
-/*this function helps us to get the ping object ready for post*/
+/*this function helps us to get the ping object ready for post
+temp        :temp of the ambience at the time of measurement
+light       :light perecentage at the time of measurement
+co          :ppm of co at the time of measurement
+co2         :ppm of co2 at the time of measurement
+json        :well formed json string object that can be posted*/
 int prepare_device_ping(float temp, float light, float co, float co2, char** json){
   // template object for the pings
   /*Here you would notice that the values of the Key Value Pairs is by default empty strings
@@ -132,9 +138,9 @@ int prepare_device_ping(float temp, float light, float co, float co2, char** jso
     {"co2", "", jsonify_numfield},
     {"co", "", jsonify_numfield}
   };
+  /*remember sprintf will not work if the desination is not of exact size*/
   int sz  = snprintf(NULL,0,"%lld",current_timestamp());
   dummy[0].strValue  = malloc(sz+1);
-  /*remember sprintf will not work if the desination is not of exact size*/
   sprintf(dummy[0].strValue,"%lld",current_timestamp());
   if (temp >0.0) {
     sz  = snprintf(NULL,0,"%.2f",temp);
@@ -201,7 +207,7 @@ void test_to_json(){
   free(json);
 }
 void test_is_device_registered(){
-  char* oldUUID  = "6bf265ee-03d6-4513-8df0-14339bbd992d";
+  char* oldUUID  = "c031bd9f-943b-4e53-b2a4-fc21299390b3";
   char* someRandomUUID  = "6410d1b0-c62e-420d-bfcd-fed87a279cb3";
   char* failUrl = "http://192.168.1.5:8033/"; //we changed the port to make it a useless url
   print_testing_header("is_device_registered test:");
@@ -240,21 +246,18 @@ void test_register_device(){
   }
 }
 void test_ping_conditions(){
-  char* currTime = malloc(sizeof(char));
-  sprintf(currTime,"%lld",current_timestamp());
-  KeyValuePair payl[] = {
-    {"tm",currTime, jsonify_numfield},
-    {"temp", "28.5", jsonify_numfield},
-    {"light", "0.65", jsonify_numfield},
-    {"co2", "402.72", jsonify_numfield},
-    {"co", "0.6", jsonify_numfield}
-  };
-  char* deviceuuid  = "139a8690-1595-4692-9ea5-3021a5b1524c";
-  assert(ping_conditions(payl,baseUrl,deviceuuid)==0);
-}
-int main(int argc, char const *argv[]) {
   char* json = (char*)malloc(1);
   prepare_device_ping(25.7,0.55,0.6, 401.8,&json);
   printf("%s\n",json);
+  json = (char*)malloc(1);
+  memset(json, 0, strlen(json));
+  prepare_device_ping(-1,-1,-1, -1,&json);
+  printf("%s\n",json);
+  return;
+}
+
+int main(int argc, char const *argv[]) {
+  char newid[] = "19dae071-ba84-43ec-a5b8-5a434729b088";
+  assert(update_deviceidlic(newid)==0);
   return 0;
 }

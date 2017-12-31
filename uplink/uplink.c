@@ -319,6 +319,70 @@ int splitstr_token(char* toSplit,char* token,char** left,char** right,size_t rig
   }
   else{return 1;}
 }
+/*this helps read the device id from the underlying license file
+uuid        : reads and send back the uuid of the device*/
+int deviceid_license(char** uuid){
+  int bufSize=1024;
+  FILE* fp;
+  char buf[bufSize];
+  if ((fp = fopen("/home/pi/src/aircomplexion-device/info.license", "ab+")) == NULL)
+  { /* Open source file. */
+    perror("fopen source-file");
+    return -1;
+  }
+  while (fgets(buf, sizeof(buf), fp) != NULL)
+  {
+    buf[strlen(buf) - 1] = '\0'; // eat the newline fgets() stores
+    char*left = malloc(1);
+    *uuid = malloc(1);
+    char* token = "uuid : ";
+    if(splitstr_token(buf,token,&left, uuid, 0)==0){
+      perror("UUID information not found in license file");
+      return -1;
+    }
+    break;
+  }
+  fclose(fp);
+  return 0;
+}
+/*this function updates the device license with a new uuid
+newid       :this is the newid of the device after fresh registration */
+int update_deviceidlic(char* newid){
+  FILE* fp;
+  int bufSize=1024;
+  char buf[bufSize];
+  char newBuff[bufSize];
+  char* token  = "uuid : ";
+  if((fp = fopen("/home/pi/src/aircomplexion-device/info.license", "ab+"))==NULL){
+    perror("fopen source-file");
+    return -1;
+  }
+  while (fgets(buf, sizeof(buf), fp) != NULL){
+    buf[strlen(buf) - 1] = '\0';//getting rid of the \n that fgets stores
+    if (strstr(buf, token)!=NULL) {
+      // this is when we have found the token - which means we have to reaplace with what is required
+      char replaceL [100];
+      sprintf(replaceL, "uuid : %s\n", newid);
+      // and then push that to a new buffer which eventually is going to be placed as the new license info
+      strcat(newBuff, replaceL);
+    }
+    else{
+      strcat(buf, "\n");
+      strcat(newBuff, buf);
+    }
+  }
+  // close the file as we have prepared the new buffer well
+  fclose(fp);
+  // now time to write the newbuff to the file
+  if((fp  = fopen("/home/pi/src/aircomplexion-device/info.license", "w"))==NULL){
+    // this basically would clear all the contents of the file cause of the w flag
+    fprintf(stderr, "Was able to read the uuid but failed to open the file to update the uuid \n");
+    return -1;
+  }
+  fputs(newBuff, fp);
+  fclose(fp);
+  return 0;
+}
 /* Quick check if device is found registered at the url
 Returns         :0 if not found, 1 if found, -1 if an eror
 baseUrl         :http://192.168.1.5:8038/ is the server port and ip
@@ -356,11 +420,20 @@ int register_device(KeyValuePair payload[], char* baseUrl, char** uuid){
   char * left = (char*)malloc(sizeof(char)); //response body fragment left
   char* right = (char*)malloc(sizeof(char)); //response body fragment right
   char* jsonPayload  = (char*)malloc(sizeof(char));
-
+  // Getting the uuid of the device from the license info
+  if (deviceid_license(uuid)!=0) {
+    fprintf(stderr, "Error reading the uuid from the license file \n");
+    return  -1;
+  }
+  /*if the device is found to be registered already we would exit at this point putting approp return value*/
+  if (is_device_registered(baseUrl,*uuid)==1) {
+    printf("Device is already registered under the id %s\n",*uuid);
+    fprintf(stderr, "Cannot register device under the same uuid\n");
+    return 1;
+  }
   if (to_json(payload, 3, &jsonPayload)==0){
     printf("jsonified payload:\n %s\n",jsonPayload);
     char* content = malloc(sizeof(char)); // this the body of the response
-    memset(content, 0,strlen(content));
     long response_code = 0L; // HTTP response code
     long bytesRecv =0L;
     if (url_post(url, jsonPayload, &content ,&response_code, &bytesRecv)==0){
