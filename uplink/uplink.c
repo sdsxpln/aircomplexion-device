@@ -325,7 +325,7 @@ int deviceid_license(char** uuid){
   int bufSize=1024;
   FILE* fp;
   char buf[bufSize];
-  if ((fp = fopen("/home/pi/src/aircomplexion-device/info.license", "ab+")) == NULL)
+  if ((fp = fopen("/home/pi/src/aircomplexion-device/device.license", "ab+")) == NULL)
   { /* Open source file. */
     perror("fopen source-file");
     return -1;
@@ -353,7 +353,7 @@ int update_deviceidlic(char* newid){
   char buf[bufSize];
   char newBuff[bufSize];
   char* token  = "uuid : ";
-  if((fp = fopen("/home/pi/src/aircomplexion-device/info.license", "ab+"))==NULL){
+  if((fp = fopen("/home/pi/src/aircomplexion-device/device.license", "ab+"))==NULL){
     perror("fopen source-file");
     return -1;
   }
@@ -374,7 +374,7 @@ int update_deviceidlic(char* newid){
   // close the file as we have prepared the new buffer well
   fclose(fp);
   // now time to write the newbuff to the file
-  if((fp  = fopen("/home/pi/src/aircomplexion-device/info.license", "w"))==NULL){
+  if((fp  = fopen("/home/pi/src/aircomplexion-device/device.license", "w"))==NULL){
     // this basically would clear all the contents of the file cause of the w flag
     fprintf(stderr, "Was able to read the uuid but failed to open the file to update the uuid \n");
     return -1;
