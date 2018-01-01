@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include"./uplink/uplink.h"
+#include"./licensing/license.h"
 #include<assert.h>
 #include <sys/time.h>
 #include<string.h>
@@ -257,7 +258,20 @@ void test_ping_conditions(){
 }
 
 int main(int argc, char const *argv[]) {
-  char newid[] = "19dae071-ba84-43ec-a5b8-5a434729b088";
-  assert(update_deviceidlic(newid)==0);
+  char* uuid = malloc(1);
+  char* location  = malloc(1);
+  char* email = malloc(1);
+  char* duty = malloc(1);
+  char* type = malloc(1);
+  assert(get_device_uuid(&uuid)==0);
+  printf("%s\n",uuid);
+  assert(get_device_loc(&location)==0);
+  printf("%s\n",location);
+  assert(get_device_owner(&email)==0);
+  printf("%s\n",email);
+  assert(get_device_duty(&duty)==0);
+  printf("%s\n",duty);
+  assert(get_device_type(&type)==0);
+  printf("%s\n",type);
   return 0;
 }

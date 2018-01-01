@@ -23,8 +23,8 @@ sensing_ranlib: sensing_ar
 sensing_ar:	mq7_o	mq135_o	alerts_o	lm35_o	display_o	ldr_o	adc_o uplink_o
 	ar crv ./bin/libsensing.a ./bin/adc.o ./bin/ldr.o ./bin/display.o ./bin/lm35.o ./bin/alerts.o ./bin/mq135.o ./bin/mq7.o ./bin/uplink.o
 
-testing: uplink_o
-	gcc -g ./testing.c -o./bin/testing ./bin/uplink.o -L./bin -lcurl
+testing: uplink_o license_o
+	gcc -g ./testing.c -o./bin/testing ./bin/uplink.o ./bin/license.o -L./bin -lcurl
 	gdb ./bin/testing
 
 mq7_o:	adc_o
@@ -47,6 +47,10 @@ ldr_o:	adc_o
 
 adc_o:
 	gcc -c ./adc/adc.c -I./adc -o ./bin/adc.o
+
+# this compiles the licensing module , notice -g in the gcc command, you can remove that once the debugging is done
+license_o:
+	gcc -g -c ./licensing/license.c -I./licensing -o ./bin/license.o
 
 uplink_o:
 	gcc -g -c ./uplink/uplink.c -I./uplink -o ./bin/uplink.o
