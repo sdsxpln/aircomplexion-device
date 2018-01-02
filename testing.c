@@ -258,20 +258,29 @@ void test_ping_conditions(){
 }
 
 int main(int argc, char const *argv[]) {
-  char* uuid = malloc(1);
-  char* location  = malloc(1);
-  char* email = malloc(1);
-  char* duty = malloc(1);
-  char* type = malloc(1);
-  assert(get_device_uuid(&uuid)==0);
+  char* field  = "location";
+  int result   = 0;
+  char* uuid = "";
+  if((result = get_license_attr(field, &uuid))<=0){
+    fprintf(stderr, "Failed to get the uuid of the device \n");
+    memset(*uuid,0,sizeof(char));
+    return -1;
+  }
   printf("%s\n",uuid);
-  assert(get_device_loc(&location)==0);
-  printf("%s\n",location);
-  assert(get_device_owner(&email)==0);
-  printf("%s\n",email);
-  assert(get_device_duty(&duty)==0);
-  printf("%s\n",duty);
-  assert(get_device_type(&type)==0);
-  printf("%s\n",type);
   return 0;
+  // char* uuid = malloc(1);
+  // char* location  = malloc(1);
+  // char* email = malloc(1);
+  // char* duty = malloc(1);
+  // char* type = malloc(1);
+  // assert(get_device_uuid(&uuid)==0);
+  // printf("%s\n",uuid);
+  // assert(get_device_loc(&location)==0);
+  // printf("%s\n",location);
+  // assert(get_device_owner(&email)==0);
+  // printf("%s\n",email);
+  // assert(get_device_duty(&duty)==0);
+  // printf("%s\n",duty);
+  // assert(get_device_type(&type)==0);
+  // printf("%s\n",type);
 }
