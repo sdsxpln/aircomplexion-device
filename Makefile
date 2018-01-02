@@ -49,7 +49,7 @@ adc_o:
 	gcc -c ./adc/adc.c -I./adc -o ./bin/adc.o
 
 # this compiles the licensing module , notice -g in the gcc command, you can remove that once the debugging is done
-license_o:
+license_o:	uplink_o
 	gcc -g -c ./licensing/license.c -I./licensing -o ./bin/license.o
 
 uplink_o:

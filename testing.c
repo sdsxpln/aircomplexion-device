@@ -256,31 +256,38 @@ void test_ping_conditions(){
   printf("%s\n",json);
   return;
 }
-
-int main(int argc, char const *argv[]) {
-  char* field  = "location";
-  int result   = 0;
-  char* uuid = "";
-  if((result = get_license_attr(field, &uuid))<=0){
-    fprintf(stderr, "Failed to get the uuid of the device \n");
-    memset(*uuid,0,sizeof(char));
-    return -1;
+void test_update_license_fields(){
+  char* newVal  = "type, is undefined";
+  int result =0;
+  // this then goes into a function that just returns the error code
+  if((result =update_device_type(newVal))!=0){
+    // this is when we could not write on the license file
+    if(result <0){
+      fprintf(stderr, "Failed to update device uuid, internal error\n");
+      exit(-1);
+    }
+    else{
+      // When we have a case where the return > 0 then it is the case of invalidated inputs
+      fprintf(stderr, "Value for may be invalidated, please check and try again\n");
+      exit(1);
+    }
   }
-  printf("%s\n",uuid);
-  return 0;
-  // char* uuid = malloc(1);
-  // char* location  = malloc(1);
-  // char* email = malloc(1);
-  // char* duty = malloc(1);
-  // char* type = malloc(1);
-  // assert(get_device_uuid(&uuid)==0);
-  // printf("%s\n",uuid);
-  // assert(get_device_loc(&location)==0);
-  // printf("%s\n",location);
-  // assert(get_device_owner(&email)==0);
-  // printf("%s\n",email);
-  // assert(get_device_duty(&duty)==0);
-  // printf("%s\n",duty);
-  // assert(get_device_type(&type)==0);
-  // printf("%s\n",type);
+  // << here we can go ahead to test the newly written uuid from the licensefile
+  char* updated = "";
+  if (get_device_type(&updated)!=0) {
+    fprintf(stderr, "failed to read device uuid\n");
+    exit(1);
+  }
+  assert(strcmp(updated,newVal)==0);
+  printf("%s\n", updated);
+  return;
+}
+int main(int argc, char const *argv[]) {
+  char* url = "";
+  if (get_license_server(&url)<0) {
+    fprintf(stderr, "Failed to get the license server information\n");
+    exit(-1);
+  }
+  printf("%s\n",url);
+  exit(0);
 }

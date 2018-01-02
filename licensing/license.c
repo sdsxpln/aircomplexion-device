@@ -1,5 +1,32 @@
 #include "license.h"
-
+/*H**********************************************************************
+* FILENAME :        license.c             DESIGN REF:
+* DESCRIPTION :
+*       Implementation for device license read and write
+* PUBLIC FUNCTIONS :
+        int get_device_uuid(char** uuid);
+        int get_device_loc(char** loc);
+        int get_device_owner(char** email);
+        int get_device_duty(char** duty);
+        int get_device_type(char** type);
+        int update_device_uuid(char* uuid);
+        int update_device_loc(char* loc);
+        int update_device_owner(char* email);
+        int update_device_duty(char* duty);
+        int update_device_type(char* type);
+        int authorize();
+* PRIVATE FUNCTIONS :
+        int word_match(char* line, char* word, size_t* pos)
+        int get_license_attr(char* field , char** value)
+        int write_license_attr(char* attr, char* val)
+* NOTES :
+*       Copyright EeensyMachines.org , All rights reserved
+* AUTHOR :    kneerunjun@gmail.com        START DATE :    04 Jan 2018
+* CHANGES :
+      + device license can be read
+      + device license can now be written to provided the license file is in specific recommended format
+      + word match capability would let find the attributes in the license faster
+*H*/
 
 /*given a line and a phrase to match, this can say if the exact word is matched for the first instance
 This function is yet not improvised for multiple matches
@@ -48,7 +75,7 @@ values        :value of the field in the license FILE
 returns       : 0 for not found, 1 for found, and -1 for error from any operations */
 int get_license_attr(char* field , char** value){
   FILE* fp;
-  char buff[1024];
+  char buff[MAX_BUFF];
   int found = 0; //<< signifies if the field is found in the license file
   char* fldValSep  = " : "; //<< this refers to the shape o the license file
   // since we dont want to create the file if not present , im using the flag "r"
@@ -62,6 +89,7 @@ int get_license_attr(char* field , char** value){
     size_t pos = -1; //<<position on the buffer line where the attribute is found
     if(word_match(buff,field, &pos)<=0){
       found  =0;
+      memset(buff,0,MAX_BUFF);
       continue;
     }
     if(pos<0){
@@ -80,6 +108,60 @@ int get_license_attr(char* field , char** value){
   fclose(fp);
   return found == 0 ? 0:1;
 }
+/*this helps to write a specific section in the license file.
+attr          : attribute that need to update
+val           : new updated value of the attribute
+return        : 0 for normal, >0 for invalidated inputs, <0 for exceptions*/
+int write_license_attr(char* attr, char* val){
+
+  FILE* fp;
+  char buff [MAX_BUFF]; //<< hoping the license file does not outrun this
+  char newBuff[MAX_BUFF];
+  int attrSpotted =0;
+  size_t pos = -1; //<<position on the buffer line where the attribute is found
+
+  if(strcmp(attr,"")==0 || strcmp(val,"")==0){
+    fprintf(stderr, "Attr or the value of the attr cannot be empty\n");
+    return 1;
+  }
+  // never would we want to append the file if does not exists
+  /*license files are to created by hand and this comes under the licensing purview*/
+  if ((fp=fopen(LIC_FILE_PATH, "r"))==NULL) {
+    /*this is when the file could not be opened - */
+    fprintf(stderr, "Failed to open license file\n");
+    return -1;
+  }
+  // lets read it line by line till we find the line that contains the attribute
+  while (fgets(buff,sizeof(buff),fp)!=NULL) {
+    buff[strlen(buff)-1] = '\0'; //<< since fgets gets the stream with \n at the end of each line
+    if(word_match(buff,attr, &pos)>0){
+      if(pos>=0){
+        attrSpotted =1;
+        char replacement[100]; //<< hoping that the line size does not outrun
+        sprintf(replacement, "%s : %s\n", attr, val);
+        // and this replacement then goes into the newbuff
+        strcat(newBuff,replacement);
+        continue;
+      }
+    }
+    /*if the line is not containing the attribute we are looking for  then just copy into new buffer*/
+    strcat(buff, "\n"); //<< remember this new line chracter wa replaced when read from the file
+    strcat(newBuff,buff);
+  }
+  fclose(fp); //<< closing the file when done
+  // newbuffer is now formed
+  /*file being opened with w flag which means new file with creation opened for writing ..
+  previous contents of the file are washed away*/
+  if ((fp=fopen(LIC_FILE_PATH, "w"))==NULL) {
+    /*this is when the file could not be opened - */
+    fprintf(stderr, "Failed to write to license file\n");
+    return -1;
+  }
+  fputs(newBuff, fp);
+  fclose(fp); //<< closing the file when done
+  return 0;
+}
+
 int get_device_type(char** type){
   char* field  = "type";
   int result   = 0;
@@ -129,4 +211,23 @@ int get_device_uuid(char** uuid){
     return -1;
   }
   return 0;
+}
+int get_license_server(char** baseUrl){
+  return get_license_attr("server", baseUrl);
+}
+
+int update_device_uuid(char* uuid){
+  return write_license_attr("uuid",uuid);
+}
+int update_device_loc(char* loc){
+  return write_license_attr("location",loc);
+}
+int update_device_owner(char* email){
+  return write_license_attr("owner",email);
+}
+int update_device_duty(char* duty){
+  return write_license_attr("duty",duty);
+}
+int update_device_type(char* type){
+  return write_license_attr("type",type);
 }
