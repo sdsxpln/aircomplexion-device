@@ -1,8 +1,8 @@
-uuid : 23d4c4ca-ba20-4817-a127-e865a6ec7d6b
+uuid : 762a0cb7-ec4f-47e1-9d7a-3760f0e550f9
 location : Hinjawadi Phase III , Pune 411057
 duty : Measure ambient environment conditions device
 owner : kneerunjun@gmail.com
 epoch : 1514726251759
 online : 1
-type : type, is undefined
+type : Raspberry Pi 3b+
 server : http://192.168.1.5:8038/

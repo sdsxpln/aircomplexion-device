@@ -167,6 +167,7 @@ int device_json(char** payload){
   char* owner="";
   char*  epoch="";
   char*  duty="";
+  char*  type="";
   *payload  = calloc(1024, sizeof(char)); //<< something large enough
   if(get_license_attr("uuid",&uuid)<0){fprintf(stderr, "Failed to get uuid of the device\n");return -1;}
   sprintf(*payload,"\"uuid\" : \"%s\",",uuid);
@@ -176,6 +177,8 @@ int device_json(char** payload){
   sprintf((*payload)+strlen(*payload), "\"duty\" : \"%s\",", duty);
   if(get_license_attr("owner",&owner)<0){fprintf(stderr, "Failed to get owner of the device\n");return -1;}
   sprintf((*payload)+strlen(*payload), "\"owner\" : \"%s\",", owner);
+  if(get_license_attr("type",&type)<0){fprintf(stderr, "Failed to get owner of the device\n");return -1;}
+  sprintf((*payload)+strlen(*payload), "\"type\" : \"%s\",", type);
   if(get_license_attr("epoch",&epoch)<0){fprintf(stderr, "Failed to get epoch of the device\n");return -1;}
   sprintf((*payload)+strlen(*payload), "\"epoch\" : \"%s\"", epoch);
   char buff[strlen(*payload)+3];
