@@ -283,11 +283,20 @@ void test_update_license_fields(){
   return;
 }
 int main(int argc, char const *argv[]) {
-  char* url = "";
-  if (get_license_server(&url)<0) {
-    fprintf(stderr, "Failed to get the license server information\n");
-    exit(-1);
+  // lets put up a authorization test here
+  /*
+  */
+  int result =-1;
+  if ((result=device_authorize())<0) {
+    if(result  ==-1){
+      fprintf(stderr, "Failed device authorization - the license server is down\n");
+      exit(-1);
+    }
+    else if(result == -2){
+      fprintf(stderr, "Failed device authorization, there was a problem getting the device regstered\n");
+      exit(-1);
+    }
   }
-  printf("%s\n",url);
+  printf("Device was authorised on the server\n");
   exit(0);
 }
