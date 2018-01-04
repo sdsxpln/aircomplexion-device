@@ -308,7 +308,7 @@ int device_authorize(){
           return -1;
         }
         // << here we can just update th license field
-        printf("Posted the device details successfully\n");
+        // printf("Posted the device details successfully\n");
         return 0;
       }
     }

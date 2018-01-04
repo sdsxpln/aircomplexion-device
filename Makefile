@@ -1,6 +1,7 @@
 # -*- Make -*-
 
-all:	upstart_as_service	upstart	sensing	sensing_ranlib	sensing_ar	mq7_o	mq135_o	alerts_o	lm35_o	display_o	ldr_o	adc_o uplink_o
+all:	upstart_as_service	upstart	sensing	sensing_ranlib	sensing_ar	\
+	mq7_o	mq135_o	alerts_o	lm35_o	display_o	ldr_o	adc_o uplink_o license_o
 test: testing
 
 upstart_as_service:	upstart
@@ -20,8 +21,9 @@ sensing: sensing_ranlib
 sensing_ranlib: sensing_ar
 	ranlib ./bin/libsensing.a
 
-sensing_ar:	mq7_o	mq135_o	alerts_o	lm35_o	display_o	ldr_o	adc_o uplink_o
-	ar crv ./bin/libsensing.a ./bin/adc.o ./bin/ldr.o ./bin/display.o ./bin/lm35.o ./bin/alerts.o ./bin/mq135.o ./bin/mq7.o ./bin/uplink.o
+sensing_ar:	mq7_o	mq135_o	alerts_o	lm35_o	display_o	ldr_o	adc_o uplink_o license_o
+	ar crv ./bin/libsensing.a ./bin/adc.o ./bin/ldr.o ./bin/display.o ./bin/lm35.o \
+	 ./bin/alerts.o ./bin/mq135.o ./bin/mq7.o ./bin/uplink.o ./bin/license.o
 
 testing: uplink_o license_o
 	gcc -g ./testing.c -o./bin/testing ./bin/uplink.o ./bin/license.o -L./bin -lcurl

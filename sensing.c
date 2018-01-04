@@ -20,6 +20,7 @@ run           : ./bin/sensing.c
 #include "./mq135/mq135.h"
 #include "./adc/adc.h"
 #include "./mq7/mq7.h"
+#include "./licensing/license.h"
 
 
 #define DARK_VOLTS 0.7899
@@ -54,6 +55,7 @@ void* temp_loop(void* argc);
 void* alert_loop(void* argc);
 void* co2_loop(void* argc);
 void* co_loop(void* argc);
+void* uplink_loop(void* argc);
 void* interrupt_watch(void* argc); //this one responds to the incoming system signals
 // int setup_interrupts(void* on_restart, void* on_shutd); //this setups the interrupts from the buttons using wiringpi isr
 // interrupt handlers
@@ -65,7 +67,7 @@ typedef struct {
   char err[128];
 }ambience; //this structure represents the conditions collectively that are thread safe
 ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; //presetting the values in the structure
-pthread_t tids[6];
+pthread_t tids[7];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
@@ -139,7 +141,11 @@ int main(int argc, char const *argv[]) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[5], NULL,&interrupt_watch, NULL)!=0) {
+  if (pthread_create(&tids[5], NULL,&uplink_loop, NULL)!=0) {
+    printf("Failed to start activity thread\n");
+    exit(EXIT_FAILURE);
+  }
+  if (pthread_create(&tids[6], NULL,&interrupt_watch, NULL)!=0) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
@@ -283,11 +289,15 @@ void* ldr_loop(void* argc){
 }
 
 void* uplink_loop(void* argc){
-  // this is the threaded function that goes into sending information to the cloud
-  // if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
-  //   perror("sensing/ uplink_loop:failed to set cancel state");
-  //   exit(EXIT_FAILURE);
-  // }
-  // char* uuid  = "b0d90dee-b228-42b3-aa7b-e7e9850549a8";
-  // char* url = ""
+  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
+    perror("sensing/ co_loop:failed to set cancel state");
+    exit(EXIT_FAILURE);
+  }
+  int isAuth =device_authorize(); // << cannot get this inside the loop - we would be wasting server calls that way
+  while (1) {
+    if (isAuth<0) { break;} //<< if the device is not authorised we would not allow any furhter uplinking pings
+    usleep(3*SECSTOMICROSECS);
+    continue;
+  }
+  pthread_exit(0);
 }
