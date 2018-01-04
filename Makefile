@@ -10,7 +10,7 @@ upstart_as_service:	upstart
 	sudo systemctl enable co2sense.service
 	sudo systemctl daemon-reload
 	sudo systemctl stop co2sense.service
-	sudo systemctl start co2sense.service
+	# sudo systemctl start co2sense.service
 
 upstart: sensing
 	gcc ./upstart/upstart.c -o./bin/upstart -lwiringPi

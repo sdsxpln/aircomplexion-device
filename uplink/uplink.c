@@ -518,3 +518,8 @@ int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid){
   else{return -1;}
   return 0;
 }
+int device_ping(float celcius,float light,float co2,float co){
+  printf("Now pinging the cloud with the device conditions\n");
+  printf("%.2f\t%.2f\t%.2f\t%.2f\n", celcius,light,co2,co);
+  return 0;
+}

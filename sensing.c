@@ -21,7 +21,7 @@ run           : ./bin/sensing.c
 #include "./adc/adc.h"
 #include "./mq7/mq7.h"
 #include "./licensing/license.h"
-
+#include "./uplink/uplink.h"
 
 #define DARK_VOLTS 0.7899
 #define BRIGHT_VOLTS 2.2559
@@ -296,8 +296,14 @@ void* uplink_loop(void* argc){
   int isAuth =device_authorize(); // << cannot get this inside the loop - we would be wasting server calls that way
   while (1) {
     if (isAuth<0) { break;} //<< if the device is not authorised we would not allow any furhter uplinking pings
+    pthread_mutex_lock(&lock);
+    if(device_ping(ambientnow.temp_celcius, ambientnow.light_cent, \
+      ambientnow.co2_ppm, ambientnow.co_ppm)<0){
+      fprintf(stderr, "Error uploading the conditions to the cloud\n");
+      // << ideally this should spit the error in the error.log but for now we are just hoping this is working
+    }
+    pthread_mutex_unlock(&lock);
     usleep(3*SECSTOMICROSECS);
-    continue;
   }
   pthread_exit(0);
 }

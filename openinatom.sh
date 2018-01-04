@@ -9,4 +9,5 @@ ratom testing.c \
 ./uplink/uplink.h \
 Makefile \
 ./licensing/* \
-device.license
+device.license \
+sensing.c

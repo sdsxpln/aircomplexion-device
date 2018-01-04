@@ -53,4 +53,5 @@ int deviceid_license(char** uuid);
 int update_deviceidlic(char* newid);
 int is_device_registered(char* baseUrl,  char* uuid);
 int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid);
+int device_ping(float celcius,float light,float co2,float co);
 #endif
