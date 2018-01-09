@@ -122,22 +122,22 @@ attr          : attribute that need to update
 val           : new updated value of the attribute
 return        : 0 for normal, >0 for invalidated inputs, <0 for exceptions*/
 int write_license_attr(char* attr, char* val){
-
+  char* sender = "license:write_license_attr";
+  journal_debug("Getting the license values ", sender);
   FILE* fp;
   char buff [MAX_BUFF]; //<< hoping the license file does not outrun this
   char newBuff[MAX_BUFF];
   int attrSpotted =0;
   size_t pos = -1; //<<position on the buffer line where the attribute is found
-
   if(strcmp(attr,"")==0 || strcmp(val,"")==0){
-    fprintf(stderr, "Attr or the value of the attr cannot be empty\n");
+    journal_exception("Invalid attribute or value for license file", sender);
     return 1;
   }
   // never would we want to append the file if does not exists
   /*license files are to created by hand and this comes under the licensing purview*/
   if ((fp=fopen(LIC_FILE_PATH, "r"))==NULL) {
     /*this is when the file could not be opened - */
-    fprintf(stderr, "Failed to open license file\n");
+    journal_exception("Failed to read/open license file", sender);
     return -1;
   }
   // lets read it line by line till we find the line that contains the attribute
@@ -150,6 +150,7 @@ int write_license_attr(char* attr, char* val){
         sprintf(replacement, "%s : %s\n", attr, val);
         // and this replacement then goes into the newbuff
         strcat(newBuff,replacement);
+        journal_debug("Requisite attribute in the license file found and replaced", sender);
         continue;
       }
     }
@@ -163,14 +164,18 @@ int write_license_attr(char* attr, char* val){
   previous contents of the file are washed away*/
   if ((fp=fopen(LIC_FILE_PATH, "w"))==NULL) {
     /*this is when the file could not be opened - */
-    fprintf(stderr, "Failed to write to license file\n");
+    // fprintf(stderr, "Failed to write to license file\n");
+    journal_exception("Failed to write to license file", sender);
     return -1;
   }
+  journal_debug("Updating the license file", sender);
   fputs(newBuff, fp);
   fclose(fp); //<< closing the file when done
   return 0;
 }
 int device_json(char** payload){
+  char* sender = "license:device_json";
+  journal_debug("Device details to json", sender);
   char* uuid = "";
   char* location ="";
   char* owner="";
@@ -178,22 +183,46 @@ int device_json(char** payload){
   char*  duty="";
   char*  type="";
   *payload  = calloc(1024, sizeof(char)); //<< something large enough
-  if(get_license_attr("uuid",&uuid)<0){fprintf(stderr, "Failed to get uuid of the device\n");return -1;}
+  if(get_license_attr("uuid",&uuid)<0){
+    // fprintf(stderr, "Failed to get uuid of the device\n");
+    journal_exception("Failed to get uuid of the device",sender);
+    return -1;
+  }
   sprintf(*payload,"\"uuid\" : \"%s\",",uuid);
-  if(get_license_attr("location",&location)<0){fprintf(stderr, "Failed to get location of the device\n");return -1;}
+  if(get_license_attr("location",&location)<0){
+    // fprintf(stderr, "Failed to get location of the device\n");
+    journal_exception("Failed to get location of the device",sender);
+    return -1;
+  }
   sprintf((*payload)+strlen(*payload), "\"location\" : \"%s\",", location);
-  if(get_license_attr("duty",&duty)<0){fprintf(stderr, "Failed to get duty of the device\n");return -1;}
+  if(get_license_attr("duty",&duty)<0){
+    // fprintf(stderr, "Failed to get duty of the device\n");
+    journal_exception("Failed to get duty of the device",sender);
+    return -1;
+  }
   sprintf((*payload)+strlen(*payload), "\"duty\" : \"%s\",", duty);
-  if(get_license_attr("owner",&owner)<0){fprintf(stderr, "Failed to get owner of the device\n");return -1;}
+  if(get_license_attr("owner",&owner)<0){
+    // fprintf(stderr, "Failed to get owner of the device\n");
+    journal_exception("Failed to get owner of the device",sender);
+    return -1;
+  }
   sprintf((*payload)+strlen(*payload), "\"owner\" : \"%s\",", owner);
-  if(get_license_attr("type",&type)<0){fprintf(stderr, "Failed to get owner of the device\n");return -1;}
+  if(get_license_attr("type",&type)<0){
+    // fprintf(stderr, "Failed to get owner of the device\n");
+    journal_exception("Failed to get owner of the device",sender);
+    return -1;}
   sprintf((*payload)+strlen(*payload), "\"type\" : \"%s\",", type);
-  if(get_license_attr("epoch",&epoch)<0){fprintf(stderr, "Failed to get epoch of the device\n");return -1;}
+  if(get_license_attr("epoch",&epoch)<0){
+    // fprintf(stderr, "Failed to get epoch of the device\n");
+    journal_exception("Failed to get epoch of the device",sender);
+    return -1;
+  }
   sprintf((*payload)+strlen(*payload), "\"epoch\" : \"%s\"", epoch);
   char buff[strlen(*payload)+3];
   sprintf(buff, "{%s}",*payload);
   *payload = calloc(strlen(buff), sizeof(char));
   strcpy(*payload, buff);
+  journal_debug("Success ! device details to json", sender);
   return 0;
 }
 int get_device_type(char** type){

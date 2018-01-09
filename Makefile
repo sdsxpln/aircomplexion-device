@@ -23,4 +23,4 @@ core:
 	gcc -c adc.c -I ./include -o ./lib/adc.o
 	gcc -c license.c -I ./include -o ./lib/license.o
 	gcc -c uplink.c -I ./include -o ./lib/uplink.o
-	gcc -c journal.c -I ./include -o ./lib/journal.o
+	gcc -c -Wall -DJRNL=1 journal.c -I ./include -o ./lib/journal.o

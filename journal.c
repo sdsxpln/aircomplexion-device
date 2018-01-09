@@ -33,7 +33,7 @@ int journal_exception(char* errMessage,char* sender){
   return 0;
 }
 int journal_debug(char* message, char* sender){
-  #if(JRNL && JRNL>=1)
+  #if(JRNL && JRNL>1)
     FILE* fp ;
     // opening the file for appending data
     if ((fp=fopen(JOURNAL_FPATH,"ab+"))==NULL) {

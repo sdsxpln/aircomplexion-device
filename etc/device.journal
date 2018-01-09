@@ -1,3 +1,164 @@
->> testing:main	[2018-1-9 17:48:29]	This is a debug message from within the program
->> testing:main	[2018-1-9 17:48:29]	you should see this message on the line next
-!E testing:main	[2018-1-9 17:48:29]	you should see this message on the line next
+>> uplink:device_authorize	[2018-1-9 21:40:31]	Starting device authorization
+>> license:word_match	[2018-1-9 21:40:31]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:31]	Got value of the license attribute
+>> uplink:device_authorize	[2018-1-9 21:40:31]	Extracted uuid from the license file
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:31]	Got value of the license attribute
+>> uplink:device_authorize	[2018-1-9 21:40:31]	Url to be hit for device registration : 
+http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/
+
+>> uplink:device_authorize	[2018-1-9 21:40:31]	About to get the device details
+>> uplink:url_get	[2018-1-9 21:40:31]	HTTP GET request
+>> uplink:url_get	[2018-1-9 21:40:31]	Ready to make HTTP request
+>> uplink:url_get	[2018-1-9 21:40:31]	HTTP response 200 OK
+>> uplink:device_authorize	[2018-1-9 21:40:31]	Server response 200OK
+>> uplink:device_authorize	[2018-1-9 21:40:31]	Device of the same id found already registered:
+>> uplink:device_ping	[2018-1-9 21:40:31]	Now pinging the cloud with the device conditions
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:31]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:31]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:40:31]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:31]	Got value of the license attribute
+>> uplink:url_post	[2018-1-9 21:40:31]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:40:31]	CURL ready
+>> uplink:url_post	[2018-1-9 21:40:31]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:40:31]	HTTP Response 200 OK
+>> uplink:device_ping	[2018-1-9 21:40:34]	Now pinging the cloud with the device conditions
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:34]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:34]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:40:34]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:34]	Got value of the license attribute
+>> uplink:url_post	[2018-1-9 21:40:34]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:40:34]	CURL ready
+>> uplink:url_post	[2018-1-9 21:40:35]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:40:35]	HTTP Response 200 OK
+>> uplink:device_ping	[2018-1-9 21:40:38]	Now pinging the cloud with the device conditions
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:40:38]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:38]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:40:38]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:40:38]	Got value of the license attribute
+>> uplink:url_post	[2018-1-9 21:40:38]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:40:38]	CURL ready
+>> uplink:url_post	[2018-1-9 21:40:39]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:40:39]	HTTP Response 200 OK
+>> uplink:device_authorize	[2018-1-9 21:45:11]	Starting device authorization
+>> license:word_match	[2018-1-9 21:45:11]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:11]	Got value of the license attribute
+>> uplink:device_authorize	[2018-1-9 21:45:11]	Extracted uuid from the license file
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:11]	Got value of the license attribute
+>> uplink:device_authorize	[2018-1-9 21:45:11]	Url to be hit for device registration : 
+http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/
+
+>> uplink:device_authorize	[2018-1-9 21:45:11]	About to get the device details
+>> uplink:url_get	[2018-1-9 21:45:11]	HTTP GET request
+>> uplink:url_get	[2018-1-9 21:45:11]	Ready to make HTTP request
+>> uplink:url_get	[2018-1-9 21:45:11]	HTTP response 200 OK
+>> uplink:device_authorize	[2018-1-9 21:45:11]	Server response 200OK
+>> uplink:device_authorize	[2018-1-9 21:45:11]	Device of the same id found already registered:
+>> uplink:device_ping	[2018-1-9 21:45:11]	Now pinging the cloud with the device conditions
+>> uplink:device_ping	[2018-1-9 21:45:11]	{"tm" : 1515534311710 ,"temp" : 25.34 ,"light" : 0.58 ,"co2" : 402.56 ,"co" : 0.00}
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:11]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:11]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:45:11]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:11]	Got value of the license attribute
+>> uplink:device_ping	[2018-1-9 21:45:11]	http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/pings/
+>> uplink:url_post	[2018-1-9 21:45:11]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:45:11]	CURL ready
+>> uplink:url_post	[2018-1-9 21:45:12]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:45:12]	HTTP Response 200 OK
+>> uplink:device_ping	[2018-1-9 21:45:15]	Now pinging the cloud with the device conditions
+>> uplink:device_ping	[2018-1-9 21:45:15]	{"tm" : 1515534315230 ,"temp" : 25.34 ,"light" : 0.58 ,"co2" : 402.56 ,"co" : 0.00}
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:15]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:15]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:45:15]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:15]	Got value of the license attribute
+>> uplink:device_ping	[2018-1-9 21:45:15]	http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/pings/
+>> uplink:url_post	[2018-1-9 21:45:15]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:45:15]	CURL ready
+>> uplink:url_post	[2018-1-9 21:45:15]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:45:15]	HTTP Response 200 OK
+>> uplink:device_ping	[2018-1-9 21:45:18]	Now pinging the cloud with the device conditions
+>> uplink:device_ping	[2018-1-9 21:45:18]	{"tm" : 1515534318759 ,"temp" : 25.34 ,"light" : 0.59 ,"co2" : 431.77 ,"co" : 0.00}
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:18]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:18]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:45:18]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:18]	Got value of the license attribute
+>> uplink:device_ping	[2018-1-9 21:45:18]	http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/pings/
+>> uplink:url_post	[2018-1-9 21:45:18]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:45:18]	CURL ready
+>> uplink:url_post	[2018-1-9 21:45:19]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:45:19]	HTTP Response 200 OK
+>> uplink:device_ping	[2018-1-9 21:45:22]	Now pinging the cloud with the device conditions
+>> uplink:device_ping	[2018-1-9 21:45:22]	{"tm" : 1515534322284 ,"temp" : 25.34 ,"light" : 0.59 ,"co2" : 442.14 ,"co" : 0.00}
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Phrase sought is not found
+>> license:word_match	[2018-1-9 21:45:22]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:22]	Got value of the license attribute
+>> license:word_match	[2018-1-9 21:45:22]	Complete word found
+>> license:get_license_attr	[2018-1-9 21:45:22]	Got value of the license attribute
+>> uplink:device_ping	[2018-1-9 21:45:22]	http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/pings/
+>> uplink:url_post	[2018-1-9 21:45:22]	POST HTTP call
+>> uplink:url_post	[2018-1-9 21:45:22]	CURL ready
+>> uplink:url_post	[2018-1-9 21:45:22]	HTTP response received
+>> uplink:url_post	[2018-1-9 21:45:22]	HTTP Response 200 OK

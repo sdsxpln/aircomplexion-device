@@ -79,13 +79,18 @@ this mandates the curl to emit an error if thhe error from the server is returne
 */
 
 int url_post(char* url, char* payload, char** content , long* response_code, long* bytesRecv){
+  char* sender = "uplink:url_post";
+  journal_debug("POST HTTP call", sender);
   int ok = 0; // overall status of the function performance
   CURL* curl; // curl handle
   CURLcode response = CURLE_OK; // curl response
   *bytesRecv =0L;
   *response_code = 0L;
   char* buff  = realloc(*content,sizeof(char));
-  if (!buff) {perror("Failed to allocate memory, out of memory");return -1;}
+  if (!buff) {
+    journal_exception("Out of memory", sender);
+    return -1;
+  }
   else{
     *content = buff;
     memset(*content,0,strlen(*content));
@@ -98,10 +103,11 @@ int url_post(char* url, char* payload, char** content , long* response_code, lon
   curl = curl_easy_init();
   if(!curl){
     // is the case when we could not init the curl pointer itself
-    perror("failed to instantiate the CURL client");
+    journal_exception("Failed to instantiate the CURL client", sender);
     ok =-1;
     goto cleanup;
   }
+  journal_debug("CURL ready", sender);
   /*setting options*/
   curl_easy_setopt(curl, CURLOPT_URL, url);
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -115,12 +121,17 @@ int url_post(char* url, char* payload, char** content , long* response_code, lon
   /*actually performing the curl request*/
   response =curl_easy_perform(curl);
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
+  journal_debug("HTTP response received", sender);
   if (response!=CURLE_OK) {
-    printf("%s\n", "REsponse is not 200 ok");
-    fprintf(stderr, "%s\n",error_buf);
+    journal_exception("Server response not 200OK", sender);
+    journal_exception(error_buf, sender);
     /*error string being copied to the content*/
     buff = realloc(*content,strlen(error_buf)+1);
-    if(!buff){ok =-1;perror("failed to allocate memory, cannot send back content");goto cleanup;}
+    if(!buff){
+      ok =-1;
+      journal_exception("Out of memory", sender);
+      goto cleanup;
+    }
     else{*content = buff;}
     memcpy(*content,error_buf, strlen(error_buf)+1);
     *bytesRecv = strlen(error_buf);
@@ -130,11 +141,14 @@ int url_post(char* url, char* payload, char** content , long* response_code, lon
   else{
     /*case when we have 200 Ok from the servr*/
     if(*response_code ==200 || *response_code ==201){
-      printf("%s\n", "Trying to print the chunk.memory");
-      printf("%s\n", chunk.memory);
+      journal_debug("HTTP Response 200 OK", sender);
       if(0!=strcmp(chunk.memory, "null")){
         buff = realloc(*content, strlen(chunk.memory)+1);
-        if(!buff){perror("Failed to allocate memory, cannot send back content"); ok =-1; goto cleanup;}
+        if(!buff){
+          journal_exception("Out of memory, cannot send back content", sender);
+          ok =-1;
+          goto cleanup;
+        }
         else{*content= buff;}
         memcpy(*content,chunk.memory, strlen(chunk.memory)+1);
         *bytesRecv = chunk.size;
@@ -142,16 +156,14 @@ int url_post(char* url, char* payload, char** content , long* response_code, lon
       }
     }
   }
-  // printf("CURL POST success , status code %ld\n", response_code);
-  // need to check if the response is in structure
-  // printf("We have received %d bytes in the server response \n", chunk.size);
-  // printf("%s\n", chunk.memory);
   cleanup:
     curl_easy_cleanup(curl);
     // curl_global_cleanup();
   return ok;
 }
 int url_get(char* url, char** content,long* response_code,long* bytesRecv){
+  char* sender = "uplink:url_get";
+  journal_debug("HTTP GET request", sender);
   int ok  = 0; //at the onset everything is ok
   CURL *curl;
   CURLcode res;
@@ -165,7 +177,7 @@ int url_get(char* url, char** content,long* response_code,long* bytesRecv){
 
   char error_buf[CURL_ERROR_SIZE];
   curl = curl_easy_init();
-  if(!curl){perror("failed to instantiate the CURL client");ok  = -1;goto cleanup;}
+  if(!curl){journal_exception("failed to instantiate the CURL client", sender);ok  = -1;goto cleanup;}
   /*
   read more on the write function here :
   https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html*/
@@ -178,8 +190,9 @@ int url_get(char* url, char** content,long* response_code,long* bytesRecv){
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+  journal_debug("Ready to make HTTP request", sender);
   if(res = curl_easy_perform(curl) != CURLE_OK){
-    fprintf(stderr, "We have error response from the server :%d\n", res);
+    journal_exception("Response from server not 200OK", sender);
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
     ok =0;
     *bytesRecv = strlen(error_buf);
@@ -190,6 +203,7 @@ int url_get(char* url, char** content,long* response_code,long* bytesRecv){
     from the server then chunk.memory would contain 'null' literal string ,
     we are just making sure that we send NULL response when such a case occurs
     If chunk.memory == "null" then contents == NULL*/
+   journal_debug("HTTP response 200 OK", sender);
    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, response_code);
    if(0!=strcmp(chunk.memory, "null")){
     //  this would send back not empty string outside
@@ -203,6 +217,7 @@ int url_get(char* url, char** content,long* response_code,long* bytesRecv){
    else{
     //  this would send back empty string
     // please strcmp(content, "") to know if there is content or not
+     journal_debug("Empty content", sender);
      memset(*content,0,strlen(*content));
      ok =0;
    }
@@ -527,79 +542,80 @@ with the new uuid and device details as  in thelicense file
 - 1       : device could not be authorized since there was a server error
 - 2       : failed device registration, device was obviously not found registered*/
 int device_authorize(){
+  char* sender  = "uplink:device_authorize";
   char* uuidLocal  = "";
   FILE* journal;
-  if((journal=fopen("/home/pi/src/aircomplexion-device/etc/device.journal", "w"))==NULL){
-    perror("Failed to open the device journal");
-    return -1;
-  }
-  fprintf(journal, "Starting device authorization..\n");
+  journal_debug("Starting device authorization", sender);
   if (get_device_uuid(&uuidLocal)!=0) {
-    fprintf(journal, "Failed to read local license file for the uuid\n");
+    journal_exception("Failed to read local license file for the uuid", sender);
     return -1;
   }
-  fprintf(journal, "Extracted uuid from the license file : %s\n", uuidLocal);
+  journal_debug("Extracted uuid from the license file", sender);
   // preparing the url for the device get details
   char* baseUrl = "";
   if(get_license_server(&baseUrl)<0){
-    fprintf(stderr, "Failed to read base url of the license server\n");
+    journal_exception("Failed to read base url of the license server", sender);
     return -1;
   }
-  fprintf(journal, "Baseurl of the license server : %s\n", baseUrl);
   char temp[256];
   sprintf(temp, "%sapi/uplink/devices/%s/",baseUrl,uuidLocal);
   char url[strlen(temp)+1];
   strcpy(url,temp);
-  fprintf(journal, "Url to be hit for device registration : \n%s\n", url);
-
+  char jr_msg[128];
+  sprintf(jr_msg, "Url to be hit for device registration : \n%s\n", url);
+  journal_debug(jr_msg,sender);
   // no proceeding for getting device details
   char* content = calloc(1, sizeof(char));
   long response = 0L, bytesRecv =0L;
+  journal_debug("About to get the device details", sender);
   if(url_get(url,&content,&response,&bytesRecv)==0){
     if (response ==200) {
-      fprintf(journal, "Server response 200OK:\n");
+      journal_debug("Server response 200OK", sender);
       if(0!=strcmp(content, "")){
-        fprintf(journal, "Device of the same id %s found already registered: \n%s\n", uuidLocal);
+        journal_debug("Device of the same id found already registered:", sender);
         return 1;
       }
       else{
         // << this is where we need to post details to the server
-        fprintf(journal, "Device of the same id %s NOT registered: \n%s\n", uuidLocal);
+        journal_debug("Device of the same id NOT registered:", sender);
         memset(temp,0,strlen(temp));
         sprintf(temp, "%sapi/uplink/devices/",baseUrl);
         memset(url, 0, strlen(url));
         strcpy(url,temp);
         char* pyld ="";
         if(device_json(&pyld)!=0){
-          fprintf(journal, "failed to convert device details to json\n");
+          journal_exception("failed to convert device details to json", sender);
           return -1;
         }
         // << is where we can post the device details
         content = calloc(1, sizeof(char));
         long response = 0L, bytesRecv =0L;
+        journal_debug("Sending device details to server:", sender);
         if (url_post(url,pyld,&content,&response,&bytesRecv)<0){
-          fprintf(journal, "Error registering the device online\n");
+          journal_exception("Error registering the device online", sender);
           return -1;
         }
-        fprintf(journal, "Device successfully registered online\n");
+        journal_debug("Device successfully registered online",sender);
         // << here we can just update th license field
         // printf("Posted the device details successfully\n");
         return 0;
       }
     }
     else{
-      fprintf(journal, "Server response to get device details not 200 OK\n");
+      journal_exception("Failed to get device details from the server", sender);
       return -1;
     }
   }
   else{
-    fprintf(journal, "GET request was not made, error finding the device details on the server\n");
+    journal_exception("GET HTTP request could not be made", sender);
     return -1;
   }
   fclose(journal);
+  return 0;
 }
 int device_ping(float celcius,float light,float co2,float co){
-  printf("Now pinging the cloud with the device conditions\n");
+  char* sender = "uplink:device_ping";
+  journal_debug("Now pinging the cloud with the device conditions", sender);
   // we nee to transform the data to json format before it is Posted
   char* json = calloc(1, sizeof(char));
   char buff[256];
@@ -609,21 +625,21 @@ int device_ping(float celcius,float light,float co2,float co){
   long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
   sprintf(buff,"{\"tm\" : %lld ,",milliseconds);
   *temp  = realloc(json,strlen(buff)+1);
-  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  if(*temp==NULL){journal_exception("Out of memory", sender);return -1;}
   json  = *temp;
   strcat(json, buff);
   memset(buff,0,sizeof(buff));
   // Now getting the temperature in in the json format
   sprintf(buff, "\"temp\" : %.2f ,",celcius);
   *temp  = realloc(json,strlen(buff)+1+strlen(json));
-  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  if(*temp==NULL){journal_exception("Out of memory", sender);return -1;}
   json  = *temp;
   strcat(json, buff);
   memset(buff,0,sizeof(buff));
   // Now getting the light in in the json format
   sprintf(buff, "\"light\" : %.2f ,",light);
   *temp  = realloc(json,strlen(buff)+1+strlen(json));
-  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  if(*temp==NULL){journal_exception("Out of memory", sender);return -1;}
   json  = *temp;
   strcat(json, buff);
   memset(buff,0,sizeof(buff));
@@ -631,7 +647,7 @@ int device_ping(float celcius,float light,float co2,float co){
   if(co2>=0.00){
     sprintf(buff, "\"co2\" : %.2f ,",co2);
     *temp  = realloc(json,strlen(buff)+1+strlen(json));
-    if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+    if(*temp==NULL){journal_exception("Out of memory", sender);return -1;}
     json  = *temp;
     strcat(json, buff);
     memset(buff,0,sizeof(buff));
@@ -645,29 +661,29 @@ int device_ping(float celcius,float light,float co2,float co){
     memset(buff,0,sizeof(buff));
   }
   // Getting the license server for the device
-  printf("%s\n",json);
+  journal_debug(json,sender);
   char* baseUrl = calloc(1, sizeof(char));
   char* uuid  = calloc(1, sizeof(char));
   char* url = calloc(1, sizeof(char));
-  if(get_license_server(&baseUrl)<0){fprintf(stderr, "Error reading the license details\n"); return -1;}
-  if(get_device_uuid(&uuid)<0){fprintf(stderr, "Error reading the license details\n"); return -1;}
+  if(get_license_server(&baseUrl)<0){journal_exception("Error reading the baseUrl from license file", sender); return -1;}
+  if(get_device_uuid(&uuid)<0){journal_exception("Error reading the uuid from license file", sender); return -1;}
   temp  = &url;
   sprintf(buff, "%sapi/uplink/devices/%s/pings/",baseUrl,uuid);
   *temp = realloc(url, strlen(buff)+1);
-  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  if(*temp==NULL){journal_exception("Out of memory", sender);return -1;}
   url  = *temp;
   strcpy(url, buff);
   // if the url is assumed to be ok, we can the proceed for posting the pings
   char* content = calloc(1,sizeof(char));
   long response = 0L;
   long bytesRecv = 0L;
-  printf("%s\n",url);
+  journal_debug(url,sender);
   if(url_post(url,json,&content,&response,&bytesRecv)<0){
-    fprintf(stderr, "Failed to post the device ping. Url post failed\n");
+    journal_exception("Failed to post the device ping", sender);
     return -1;
   }
   if(response!=200){
-    fprintf(stderr, "Server response not OK, failed to post device ping\n");
+    journal_exception("Failed to post the device ping: Error response from server", sender);
     return -1;
   }
   free(json);
