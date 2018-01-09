@@ -32,3 +32,4 @@ A project from the PiFarm suite of application to sense the air quality , measur
 24. [CO experiment on incense sticks](https://www.isiaq.org/docs/papers/2C4o5.pdf)
 25. [Using mutex to lock shared resources in multithreaded C](http://www.geeksforgeeks.org/mutex-lock-for-linux-thread-synchronization/)
 26. [Pi hangs when using PWM in wiringPi](https://github.com/Pi4J/pi4j/issues/352)
+37. [Starting systemd units after the network is up](https://bbs.archlinux.org/viewtopic.php?id=166618)
