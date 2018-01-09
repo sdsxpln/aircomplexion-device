@@ -1,0 +1,3 @@
+>> testing:main	[2018-1-9 17:48:29]	This is a debug message from within the program
+>> testing:main	[2018-1-9 17:48:29]	you should see this message on the line next
+!E testing:main	[2018-1-9 17:48:29]	you should see this message on the line next

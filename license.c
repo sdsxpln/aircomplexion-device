@@ -35,8 +35,13 @@ word          :word phrase that we are looking for needs to be atleast 2 bytes
 pos           : position at which the word is encountered*/
 int word_match(char* line, char* word, size_t* pos){
   int wordMatch  =0;
+  char* sender = "license:word_match";
   *pos  = -1; //<< assuming that we have no matches yet
-  if(strlen(word)<2){fprintf(stderr, "Its not a word that you are looking for, is it ?\n");return -1;} //<< if its not a word at all
+  if(strlen(word)<2){
+    // fprintf(stderr, "Its not a word that you are looking for, is it ?\n");
+    journal_exception("Word being searched is perhaps a chracter", sender);
+    return -1;
+  } //<< if its not a word at all
   char* result = strstr(line,word);
   if (result != NULL) {
     // move ahead by the word length to get to suspected word spotting
@@ -46,25 +51,25 @@ int word_match(char* line, char* word, size_t* pos){
       // << we can then do to see if its a word on the right side too
       size_t wordEnd  = *pos+strlen(word);
       if(*(line+wordEnd)==' ' || *(line+wordEnd)=='\0'){
-        //<< perfect word
-        // printf("Word match success !!\n");
+        journal_debug("Complete word found", sender);
         return 1;
       }
       else{
         // <<this is the case when the word is part of some other word from the right
-        // printf("Word match fail :Right !!\n");
+        journal_debug("Phrase found, but not a word", sender);
         return 0;
       }
     }
     else{
+      journal_debug("Phrase found, but not a word", sender);
       // <<this is the case when the word is part of some other word from the left
-      // printf("Word match fail :Left !!\n");
       return 0;
     }
   }
   else{
     // << phrase is not found at all
     // printf("Word not found in the string \n");
+    journal_debug("Phrase sought is not found",sender);
     return 0;
   }
 }
@@ -74,13 +79,15 @@ field         :field in the license file you are looking for
 values        :value of the field in the license FILE
 returns       : 0 for not found, 1 for found, and -1 for error from any operations */
 int get_license_attr(char* field , char** value){
+  char* sender  = "license:get_license_attr";
   FILE* fp;
   char buff[MAX_BUFF];
   int found = 0; //<< signifies if the field is found in the license file
   char* fldValSep  = " : "; //<< this refers to the shape o the license file
   // since we dont want to create the file if not present , im using the flag "r"
   if ((fp = fopen(LIC_FILE_PATH, "r"))==NULL) {
-    fprintf(stderr, "Failed to open license file ! - Check if the device has a valid license file\n");
+    // fprintf(stderr, "Failed to open license file ! - Check if the device has a valid license file\n");
+    journal_exception("Failed to open license file", sender);
     return -1; //<< error condition
   }
   while (fgets(buff,sizeof(buff), fp)!=NULL) {
@@ -93,7 +100,8 @@ int get_license_attr(char* field , char** value){
       continue;
     }
     if(pos<0){
-      fprintf(stderr, "failed to get attribute position in the license file\n");
+      // fprintf(stderr, "failed to get attribute position in the license file\n");
+      journal_exception("Failed to read license attribute, check license file formatting", sender);
       return -1;
     }
     // << this is where we are sure we have struck the attribute exactly
@@ -103,6 +111,7 @@ int get_license_attr(char* field , char** value){
     valEnd = strlen(buff);
     *value = calloc(valEnd-valBegin+1, sizeof(char));
     strncpy(*value,buff+valBegin ,valEnd-valBegin);
+    journal_debug("Got value of the license attribute", sender);
     break;
   }
   fclose(fp);
