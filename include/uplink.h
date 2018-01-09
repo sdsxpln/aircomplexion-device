@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include "../licensing/license.h"
 
 struct MemoryStruct {
   char *memory;
@@ -53,5 +54,6 @@ int deviceid_license(char** uuid);
 int update_deviceidlic(char* newid);
 int is_device_registered(char* baseUrl,  char* uuid);
 int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid);
+int device_authorize();
 int device_ping(float celcius,float light,float co2,float co);
 #endif

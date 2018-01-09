@@ -1,7 +1,0 @@
-[Unit]
-Description=This cranks up the governor service of the co2sense
-[Service]
-Type=simple
-ExecStart=/home/pi/src/aircomplexion-device/bin/upstart
-[Install]
-WantedBy=default.target

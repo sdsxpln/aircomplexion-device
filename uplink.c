@@ -518,8 +518,161 @@ int ping_conditions(KeyValuePair payload[], char* baseUrl, char* uuid){
   else{return -1;}
   return 0;
 }
+/*This helps to authorize the device on the server
+It would get the device id from the license file, and try to find a device with the uuif
+Wehn not found, the function registers a new device and updates the license file
+with the new uuid and device details as  in thelicense file
+0         : device not found on server, needs registration
+1         : device found on server,already registered
+- 1       : device could not be authorized since there was a server error
+- 2       : failed device registration, device was obviously not found registered*/
+int device_authorize(){
+  char* uuidLocal  = "";
+  FILE* journal;
+  if((journal=fopen("/home/pi/src/aircomplexion-device/device.journal", "w"))==NULL){
+    perror("Failed to open the device journal");
+    return -1;
+  }
+  fprintf(journal, "Starting device authorization..\n");
+  if (get_device_uuid(&uuidLocal)!=0) {
+    fprintf(journal, "Failed to read local license file for the uuid\n");
+    return -1;
+  }
+  fprintf(journal, "Extracted uuid from the license file : %s\n", uuidLocal);
+  // preparing the url for the device get details
+  char* baseUrl = "";
+  if(get_license_server(&baseUrl)<0){
+    fprintf(stderr, "Failed to read base url of the license server\n");
+    return -1;
+  }
+  fprintf(journal, "Baseurl of the license server : %s\n", baseUrl);
+  char temp[256];
+  sprintf(temp, "%sapi/uplink/devices/%s/",baseUrl,uuidLocal);
+  char url[strlen(temp)+1];
+  strcpy(url,temp);
+  fprintf(journal, "Url to be hit for device registration : \n%s\n", url);
+
+  // no proceeding for getting device details
+  char* content = calloc(1, sizeof(char));
+  long response = 0L, bytesRecv =0L;
+  if(url_get(url,&content,&response,&bytesRecv)==0){
+    if (response ==200) {
+      fprintf(journal, "Server response 200OK:\n");
+      if(0!=strcmp(content, "")){
+        fprintf(journal, "Device of the same id %s found already registered: \n%s\n", uuidLocal);
+        return 1;
+      }
+      else{
+        // << this is where we need to post details to the server
+        fprintf(journal, "Device of the same id %s NOT registered: \n%s\n", uuidLocal);
+        memset(temp,0,strlen(temp));
+        sprintf(temp, "%sapi/uplink/devices/",baseUrl);
+        memset(url, 0, strlen(url));
+        strcpy(url,temp);
+        char* pyld ="";
+        if(device_json(&pyld)!=0){
+          fprintf(journal, "failed to convert device details to json\n");
+          return -1;
+        }
+        // << is where we can post the device details
+        content = calloc(1, sizeof(char));
+        long response = 0L, bytesRecv =0L;
+        if (url_post(url,pyld,&content,&response,&bytesRecv)<0){
+          fprintf(journal, "Error registering the device online\n");
+          return -1;
+        }
+        fprintf(journal, "Device successfully registered online\n");
+        // << here we can just update th license field
+        // printf("Posted the device details successfully\n");
+        return 0;
+      }
+    }
+    else{
+      fprintf(journal, "Server response to get device details not 200 OK\n");
+      return -1;
+    }
+  }
+  else{
+    fprintf(journal, "GET request was not made, error finding the device details on the server\n");
+    return -1;
+  }
+  fclose(journal);
+}
 int device_ping(float celcius,float light,float co2,float co){
   printf("Now pinging the cloud with the device conditions\n");
-  printf("%.2f\t%.2f\t%.2f\t%.2f\n", celcius,light,co2,co);
+  // we nee to transform the data to json format before it is Posted
+  char* json = calloc(1, sizeof(char));
+  char buff[256];
+  char** temp = &json;
+  struct timeval te;
+  gettimeofday(&te, NULL); // get current time
+  long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+  sprintf(buff,"{\"tm\" : %lld ,",milliseconds);
+  *temp  = realloc(json,strlen(buff)+1);
+  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  json  = *temp;
+  strcat(json, buff);
+  memset(buff,0,sizeof(buff));
+  // Now getting the temperature in in the json format
+  sprintf(buff, "\"temp\" : %.2f ,",celcius);
+  *temp  = realloc(json,strlen(buff)+1+strlen(json));
+  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  json  = *temp;
+  strcat(json, buff);
+  memset(buff,0,sizeof(buff));
+  // Now getting the light in in the json format
+  sprintf(buff, "\"light\" : %.2f ,",light);
+  *temp  = realloc(json,strlen(buff)+1+strlen(json));
+  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  json  = *temp;
+  strcat(json, buff);
+  memset(buff,0,sizeof(buff));
+  // Notice that the gaseous content if greater than 0.0 . only then needs to be inducted
+  if(co2>=0.00){
+    sprintf(buff, "\"co2\" : %.2f ,",co2);
+    *temp  = realloc(json,strlen(buff)+1+strlen(json));
+    if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+    json  = *temp;
+    strcat(json, buff);
+    memset(buff,0,sizeof(buff));
+  }
+  if(co>=0.0){
+    sprintf(buff, "\"co\" : %.2f}",co);
+    *temp  = realloc(json,strlen(buff)+1+strlen(json));
+    if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+    json  = *temp;
+    strcat(json, buff);
+    memset(buff,0,sizeof(buff));
+  }
+  // Getting the license server for the device
+  printf("%s\n",json);
+  char* baseUrl = calloc(1, sizeof(char));
+  char* uuid  = calloc(1, sizeof(char));
+  char* url = calloc(1, sizeof(char));
+  if(get_license_server(&baseUrl)<0){fprintf(stderr, "Error reading the license details\n"); return -1;}
+  if(get_device_uuid(&uuid)<0){fprintf(stderr, "Error reading the license details\n"); return -1;}
+  temp  = &url;
+  sprintf(buff, "%sapi/uplink/devices/%s/pings/",baseUrl,uuid);
+  *temp = realloc(url, strlen(buff)+1);
+  if(*temp==NULL){fprintf(stderr, "Out of memory\n");return -1;}
+  url  = *temp;
+  strcpy(url, buff);
+  // if the url is assumed to be ok, we can the proceed for posting the pings
+  char* content = calloc(1,sizeof(char));
+  long response = 0L;
+  long bytesRecv = 0L;
+  printf("%s\n",url);
+  if(url_post(url,json,&content,&response,&bytesRecv)<0){
+    fprintf(stderr, "Failed to post the device ping. Url post failed\n");
+    return -1;
+  }
+  if(response!=200){
+    fprintf(stderr, "Server response not OK, failed to post device ping\n");
+    return -1;
+  }
+  free(json);
+  free(baseUrl);
+  free(uuid);
+  free(url);
   return 0;
 }

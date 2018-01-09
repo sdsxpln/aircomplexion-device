@@ -20,7 +20,6 @@ run           : ./bin/sensing.c
 #include "./mq135/mq135.h"
 #include "./adc/adc.h"
 #include "./mq7/mq7.h"
-#include "./licensing/license.h"
 #include "./uplink/uplink.h"
 
 #define DARK_VOLTS 0.7899
@@ -294,6 +293,7 @@ void* uplink_loop(void* argc){
     exit(EXIT_FAILURE);
   }
   int isAuth =device_authorize(); // << cannot get this inside the loop - we would be wasting server calls that way
+  
   while (1) {
     if (isAuth<0) { break;} //<< if the device is not authorised we would not allow any furhter uplinking pings
     pthread_mutex_lock(&lock);
