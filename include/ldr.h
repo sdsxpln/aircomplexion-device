@@ -1,3 +1,5 @@
+#include "adc.h"
+#include <stdio.h>
 #ifndef LDR_H
 #define LDR_H
 typedef struct {

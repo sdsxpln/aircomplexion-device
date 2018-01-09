@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <wiringPi.h>
+#include<lcd.h>
 /*this is to access the  visual and sonic alerts for the co2 sensing system*/
 #ifndef DISPLAY_H
 #define DISPLAY_H

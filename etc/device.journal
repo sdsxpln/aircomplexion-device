@@ -1,9 +1,0 @@
-Starting device authorization..
-Extracted uuid from the license file : 9ab11d44-4c71-4f88-86fe-5bce97ec9eb8
-Baseurl of the license server : http://192.168.1.5:8038/
-Url to be hit for device registration : 
-http://192.168.1.5:8038/api/uplink/devices/9ab11d44-4c71-4f88-86fe-5bce97ec9eb8/
-Server response 200OK:
-Device of the same id 9ab11d44-4c71-4f88-86fe-5bce97ec9eb8 NOT registered: 
-9ab11d44-4c71-4f88-86fe-5bce97ec9eb8
-Device successfully registered online

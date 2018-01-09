@@ -1,3 +1,7 @@
+#include<stdio.h>
+#include<wiringPi.h>
+#include "adc.h"
+#include <math.h>
 #ifndef MQ7_H
 #define MQ7_H
 #define PWM_RANGE 128

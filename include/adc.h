@@ -1,3 +1,12 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#include <unistd.h>
 #ifndef ADC_H
 #define ADC_H
 typedef enum {GAIN_TWOTHIRDS=0, GAIN_ONE=1, GAIN_TWO=2, GAIN_FOUR=3, GAIN_EIGHT=4, GAIN_SIXTEEN=5} PGA;

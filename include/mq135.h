@@ -1,3 +1,6 @@
+#include<stdio.h>
+#include <math.h>
+#include "adc.h" //this is for accessing the analog readings from the ADS1115
 #ifndef MQ135_H
 #define MQ135_H
 // refer this for slope and intercept calculations http://www.instructables.com/id/Arduino-Air-Monitor-Shield-Live-in-a-Safe-Environm/

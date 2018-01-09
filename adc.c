@@ -1,12 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <linux/i2c-dev.h>
-#include <linux/i2c.h>
-#include <unistd.h>
 #include "adc.h"
 /*
 author    :kneerunjun

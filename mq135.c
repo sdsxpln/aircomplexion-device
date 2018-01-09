@@ -1,7 +1,4 @@
-#include<stdio.h>
-#include <math.h>
-#include "../adc/adc.h" //this is for accessing the analog readings from the ADS1115
-#include"../mq135/mq135.h"
+#include"mq135.h"
 /*this is the function capable of returning the co2 reading in parts per million
 @ok         :denotes the status of the calcualtions and overall function status -check to for < 0 to know the presence of exceptions
 @adschannel :the channel where the mq135 is actually attached.

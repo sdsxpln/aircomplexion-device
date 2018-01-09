@@ -1,11 +1,11 @@
-#ifndef LICENSE_H
-#define LICENSE_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef LICENSE_H
+#define LICENSE_H
 
-#define LIC_FILE_PATH "/home/pi/src/aircomplexion-device/device.license"
+
+#define LIC_FILE_PATH "/home/pi/src/aircomplexion-device/etc/device.license"
 #define MAX_BUFF  1024
 
 int get_device_uuid(char** uuid);

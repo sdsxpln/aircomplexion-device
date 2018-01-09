@@ -1,6 +1,5 @@
-#include "../ldr/ldr.h"
-#include "../adc/adc.h"
-#include <stdio.h>
+#include "ldr.h"
+
 /*this function returns the temperature of the room
 @ok         :status of the function
 @adschn     :this is the channel to which the LDR is attached

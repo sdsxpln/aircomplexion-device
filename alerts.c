@@ -1,6 +1,4 @@
 #include "alerts.h"
-#include <unistd.h>
-#include <wiringPi.h>
 /*this is only to get the GPIO pins ready , up and running*/
 int bLED=0, rLED=0, buzz=0;
 void setup_alert(int bluegpio, int redgpio, int buzzgpio){

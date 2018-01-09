@@ -1,8 +1,5 @@
-#include<stdio.h>
 #include "mq7.h"
-#include<wiringPi.h>
-#include "../adc/adc.h"
-#include <math.h>
+
 void heater_full_power(int gpio,int npn_invert){
   wiringPiSetupGpio();
   pinMode(gpio, OUTPUT);

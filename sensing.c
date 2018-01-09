@@ -13,14 +13,14 @@ run           : ./bin/sensing.c
 #include <string.h>
 #include<signal.h>
 #include <pthread.h>
-#include "./ldr/ldr.h"
-#include "./display/display.h"
-#include "./lm35/lm35.h"
-#include "./alerts/alerts.h"
-#include "./mq135/mq135.h"
-#include "./adc/adc.h"
-#include "./mq7/mq7.h"
-#include "./uplink/uplink.h"
+#include "ldr.h"
+#include "display.h"
+#include "lm35.h"
+#include "alerts.h"
+#include "mq135.h"
+#include "adc.h"
+#include "mq7.h"
+#include "uplink.h"
 
 #define DARK_VOLTS 0.7899
 #define BRIGHT_VOLTS 2.2559
@@ -293,7 +293,7 @@ void* uplink_loop(void* argc){
     exit(EXIT_FAILURE);
   }
   int isAuth =device_authorize(); // << cannot get this inside the loop - we would be wasting server calls that way
-  
+
   while (1) {
     if (isAuth<0) { break;} //<< if the device is not authorised we would not allow any furhter uplinking pings
     pthread_mutex_lock(&lock);
