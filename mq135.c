@@ -16,26 +16,23 @@ int ppm_co2(int adschn, int fcalibrate, mq135Result* result){
   if (Ro<=0) {
     // from the current Co2 in the atmosphere we are getting the Rs/Ro ratio of resistance
     ratioRsRo=pow(10,((CO2_SLOPE*(log10(CO2_PPM_NOW))+CO2_Y_INTERCEPT)));
-    /*Voltage across the load resistance can be measured using the ADS - is the voltage output from the sensor
-    observe the gain we are setting to : +-2.048 */
-    if(ads115_read_channel(0x48,adschn, GAIN_TWO, DR_128,&Vrl)!=0){
-      perror("mq135: error reading the ads channel");
-      return -1;
-    }
-    if(Vrl ==0){perror("mq135.c:failed priming of the sensor"); return -1;}
     /*please read carefully this is where I dont remember how the calculations are made
     Rt = Rs + Rl .. just the total resistance
     Rs = Rt-Rl
-    Vrl  = V*(Rl/Rt) .. this from ohms law
+    Vrl  = V*(Rl/Rt) .. this from ohms law, remember this is not the voltage measured !!
+    this is the observed voltage when the conditions were of CO2_PPM_NOW, so this then becomes
+    VOLT_PPM_NOW, I have made this mistake in the past and has cost me dearly
     Rt = (V*Rl)/Vrl
     Rs = ((V*Rl)/Vrl)-Rl ... and that gives you the the sensor resistance
     Also please note we are assuming all the resistance in KOHMS since there is a ratio that we are dealing here it does not cause any problem
     */
-    Rs=(VDD * LOAD_RESISTANCE_KOHMS/Vrl)- LOAD_RESISTANCE_KOHMS; //sensor resistance
+    Rs=(VDD * LOAD_RESISTANCE_KOHMS/VOLT_PPM_NOW)- LOAD_RESISTANCE_KOHMS; //sensor resistance
     Ro=Rs/ratioRsRo;//resistance of sensor at clean air conditions
   }
   // from here on we have the regular ppm calculations
-  if(ads115_read_channel(0x48,adschn, GAIN_TWO, DR_128,&Vrl)!=0){
+  /*Voltage across the load resistance can be measured using the ADS - is the voltage output from the sensor
+  observe the gain we are setting to : +- 4.02 , we have observed that mq135 can move upto this level*/
+  if(ads115_read_channel(0x48,adschn, GAIN_ONE, DR_128,&Vrl)!=0){
     perror("mq135: error reading the ads channel");
     return -1;
   }

@@ -8,7 +8,8 @@
 #define CO2_SLOPE -0.370955166
 //this is the load resistance on the sensor, you would perhaps have to measure on the device
 #define LOAD_RESISTANCE_KOHMS 2.5
-#define CO2_PPM_NOW 402.73 // refer https://www.co2.earth/
+#define CO2_PPM_NOW 406.75 // refer https://www.co2.earth/
+#define VOLT_PPM_NOW 0.9035 // << this is the observed voltage when considering ppm now
 #define VDD 5.00 //this is assumed that we are connecting the sensor to this much of volts
 // This structure signifies the result from each of reading.
 // use this to send out results

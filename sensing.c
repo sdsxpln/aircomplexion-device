@@ -66,7 +66,7 @@ typedef struct {
   char err[128];
 }ambience; //this structure represents the conditions collectively that are thread safe
 ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; //presetting the values in the structure
-pthread_t tids[7];
+pthread_t tids[5];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
@@ -104,8 +104,9 @@ int main_test(int argc, char const *argv[]) {
   return 0;
 }
 int main(int argc, char const *argv[]) {
-  int ok =0;
   wiringPiSetupGpio();
+  #if(TEST<=0)
+  int ok =0;
   // instantiating the lock here
   sigemptyset (&signal_mask);
   sigaddset (&signal_mask, SIGINT);
@@ -124,30 +125,30 @@ int main(int argc, char const *argv[]) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[1], NULL,&display_loop, NULL)!=0) {
+  if (pthread_create(&tids[1], NULL,&temp_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[2], NULL,&temp_loop, NULL)!=0) {
+  if (pthread_create(&tids[2], NULL,&co2_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[3], NULL,&co2_loop, NULL)!=0) {
+  // if (pthread_create(&tids[3], NULL,&co_loop, NULL)!=0) {
+  //   printf("Failed to start activity thread\n");
+  //   exit(EXIT_FAILURE);
+  // // }
+  if (pthread_create(&tids[3], NULL,&display_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[4], NULL,&co_loop, NULL)!=0) {
+  if (pthread_create(&tids[4], NULL,&interrupt_watch, NULL)!=0) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
   }
-  if (pthread_create(&tids[5], NULL,&uplink_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[6], NULL,&interrupt_watch, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
+  // if (pthread_create(&tids[5], NULL,&uplink_loop, NULL)!=0) {
+  //   printf("Failed to start activity thread\n");
+  //   exit(EXIT_FAILURE);
+  // }
   size_t i;
   int array_sz = sizeof(tids)/sizeof(pthread_t);
   for (i = 0; i < array_sz; i++) {
@@ -157,6 +158,24 @@ int main(int argc, char const *argv[]) {
   mq7_shutdown(MQ7_HEATER_GPIO,1);
   clear_all_alerts();
   pthread_mutex_destroy(&lock);
+  #else
+  // this is the area where we are expecting some test code to run
+    mq135Result result;
+    int ret = 0;
+    int count  = 0;
+    while(1){
+
+        if((ret =ppm_co2(MQ135_CHANNEL,0,&result))!=0){
+          fprintf(stderr, "Error reading the Co2 channel\n");
+          printf("Result value we received from ppm_co2 %.2f\n", result.ppmCo2);
+        }
+        // this hwere we know the co2 reading is kind of ok
+        // we can go ahead to display that
+        printf("%d]%.2f\t%.4f\n", count,result.ppmCo2,result.volts);
+        count++;
+        usleep(1*SECSTOMICROSECS);
+    }
+  #endif
   exit(EXIT_SUCCESS);
 }
 void* interrupt_watch(void* argc){
@@ -225,13 +244,18 @@ void* co2_loop(void* argc){
     ambientnow.co2_ppm=result.ppmCo2;
     if (ambientnow.co2_ppm < Co2_LVL_WARN) {
       alert(&ok,0,0);
+      // printf("We have normal levels of Co2\n");
     }
     else if (ambientnow.co2_ppm >= Co2_LVL_WARN && ambientnow.co2_ppm < Co2_LVL_ALARM){
       alert(&ok,1,0);
+      // printf("We have alarming levels of co2\n");
     }
-    else {alert(&ok,2,0);}
+    else {
+      alert(&ok,2,0);
+      // printf("We have fatal levels of co2\n");
+    }
     pthread_mutex_unlock(&lock);
-    usleep(5*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
+    usleep(2*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
   }
   pthread_exit(0);
 }
