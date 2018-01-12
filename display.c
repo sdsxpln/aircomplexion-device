@@ -39,7 +39,7 @@ void display_readings(float temp, float light, float co2, float co){
     sprintf(stream, " L:%.1f%%", light);
     lcdPuts(lcd ,stream);
   }
-  lcdPosition(lcd, 0,1);
+  // lcdPosition(lcd, 0,1);
   if (co2 >0.0) {
     sprintf(stream, "Co2:%.1f CO:%.1f", co2,co);
     lcdPuts(lcd ,stream);

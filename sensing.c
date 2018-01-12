@@ -114,6 +114,10 @@ void main_archive(){
   //   printf("Failed to start activity thread\n");
   //   exit(EXIT_FAILURE);
   // }
+  if(pthread_sigmask (SIG_UNBLOCK, &signal_mask, NULL)!=0){
+    perror("sensing/main:failed to set signal block configuration");
+    exit(EXIT_FAILURE);
+  }
   size_t i;
   int array_sz = sizeof(tids)/sizeof(pthread_t);
   for (i = 0; i < array_sz; i++) {
@@ -125,7 +129,7 @@ void main_archive(){
   pthread_mutex_destroy(&lock);
 }
 
-pthread_t  pool[1]; //<<< all the threads go in here ..
+pthread_t  pool[2]; //<<< all the threads go in here ..
 int poolSz  = sizeof(pool)/sizeof(pthread_t);
 /*this is run whn you have signal incoming from the system  - this would help in evicting all the threads*/
 static void cleanup (int sig, siginfo_t *siginfo, void *context){
@@ -163,6 +167,10 @@ int main(int argc, char const *argv[]) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
+  if (pthread_create(&pool[1], NULL,&display_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    exit(1);
+  }
   /*once all the threads are spawned we want the main thread to be back again to it default bahaviour*/
   if(pthread_sigmask (SIG_UNBLOCK, &signal_mask, NULL)!=0){
     fprintf(stderr, "Failed to set signal mask\n");
@@ -175,6 +183,7 @@ int main(int argc, char const *argv[]) {
   fprintf(stderr, "All the sensing loops have exited\n");
   // lcd_clear(); //<<turn this on when you have the display loop else this would give segmentation fault
   clear_all_alerts();
+  lcd_clear();
   pthread_mutex_destroy(&lock);
   exit(EXIT_SUCCESS);
 }
@@ -246,7 +255,7 @@ void* co2_loop(void* argc){
       perror("sensing: failed to measure co2 content");
     }
     ambientnow.co2_ppm=result.ppmCo2;
-    printf("%.2f\t\t%.2f\n",result.volts, result.ppmCo2);
+    // printf("%.2f\t\t%.2f\n",result.volts, result.ppmCo2);
     if (ambientnow.co2_ppm < Co2_LVL_WARN) {alert(&ok,0,0);}
     else if (ambientnow.co2_ppm >= Co2_LVL_WARN && ambientnow.co2_ppm < Co2_LVL_ALARM){
       alert(&ok,1,0);
@@ -280,7 +289,11 @@ void* display_loop(void* argc){
     exit(EXIT_FAILURE);
   }
   // char message[80];
-  setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3);
+  if(setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3)<0){
+    fprintf(stderr, "Error setting up the the LCD \n");
+    pthread_exit(0);
+  };
+  lcd_message("We are about to start readings");
   while (1) {
     pthread_mutex_lock(&lock);
     display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,ambientnow.co_ppm);
