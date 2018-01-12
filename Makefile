@@ -8,7 +8,7 @@ testing:
 aircomplexion: sensors
 	ar crv ./lib/libaircomplexion.a ./lib/*
 	ranlib ./lib/libaircomplexion.a
-	gcc sensing.c -Wall -DTEST -I ./include/ -o ./bin/sensing \
+	gcc sensing.c -I ./include/ -o ./bin/sensing \
 	-lm -lwiringPi -lwiringPiDev -lpthread -lcurl -L ./lib -laircomplexion
 	gcc upstart.c -I ./include -o ./bin/upstart -lwiringPi -lwiringPiDev
 	# /usr/local/bin/EensyMachines/aircomplexion/upstart

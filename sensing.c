@@ -70,7 +70,7 @@ pthread_t tids[5];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
-void start_main(){
+void main_archive(){
   int ok =0;
   // instantiating the lock here
   sigemptyset (&signal_mask);
@@ -124,48 +124,76 @@ void start_main(){
   clear_all_alerts();
   pthread_mutex_destroy(&lock);
 }
-void start_test(){
-  pthread_t  pool[1]; //<<< all the threads go in here ..
-  printf("We are now starting testing module\n");
-  if (pthread_create(&pool[0], NULL,&co2_loop, NULL)!=0) {
-    printf("Failed start co2 loop on a thread\n");
-    return;
+
+pthread_t  pool[1]; //<<< all the threads go in here ..
+int poolSz  = sizeof(pool)/sizeof(pthread_t);
+/*this is run whn you have signal incoming from the system  - this would help in evicting all the threads*/
+static void cleanup (int sig, siginfo_t *siginfo, void *context){
+  size_t i =0;
+  for (i = 0; i < poolSz; i++) {
+    pthread_cancel(pool[i]);
   }
-  size_t i;
-  int array_sz = sizeof(pool)/sizeof(pthread_t);
-  for (i = 0; i < array_sz; i++) {
-    pthread_join(pool[i], NULL);
-  }
-  fprintf(stderr, "All the sensing loops have existed\n");
-  return;
 }
 int main(int argc, char const *argv[]) {
-  wiringPiSetupGpio();
-  #ifdef TEST
-    start_test();
-  #else
-    start_main();
-  #endif
+  /*We are instructing the main thread to setup actions tht are triggered on the signal receipt
+  this helps in cleaning up and the activities*/
+  struct sigaction act;
+  memset (&act, '\0', sizeof(act));
+  act.sa_sigaction = &cleanup;
+  /* The SA_SIGINFO flag tells sigaction() to use the sa_sigaction field, not sa_handler. */
+  act.sa_flags = SA_SIGINFO;
+  if (sigaction(SIGINT, &act, NULL) < 0) {perror ("sigaction");exit(1);}
+  if (sigaction(SIGTERM, &act, NULL) < 0) {perror ("sigaction");exit(1);}
+  if (sigaction(SIGKILL, &act, NULL) < 0) {perror ("sigaction");exit(1);}
+  /*We then make a mask which all the worker threads would be inheriting
+  We want all the worker threads to basically block the 3 signasl from the system
+  By design then the main thread the only contender to handle the kill signals*/
+  sigset_t   signal_mask;
+  sigemptyset (&signal_mask);
+  sigaddset (&signal_mask, SIGINT);
+  sigaddset (&signal_mask, SIGTERM);
+  if(pthread_sigmask (SIG_BLOCK, &signal_mask, NULL)!=0){
+    fprintf(stderr, "Failed to set signal mask\n");
+    exit(1);
+  }
+  if (pthread_create(&pool[0], NULL,&co2_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    exit(1);
+  }
+  /*once all the threads are spawned we want the main thread to be back again to it default bahaviour*/
+  if(pthread_sigmask (SIG_UNBLOCK, &signal_mask, NULL)!=0){
+    fprintf(stderr, "Failed to set signal mask\n");
+    exit(1);
+  }
+  size_t i;
+  for (i = 0; i < poolSz; i++) {
+    pthread_join(pool[i], NULL);
+  }
+  fprintf(stderr, "All the sensing loops have exited\n");
+  // lcd_clear(); //<<turn this on when you have the display loop else this would give segmentation fault
+  clear_all_alerts();
+  pthread_mutex_destroy(&lock);
   exit(EXIT_SUCCESS);
-
 }
 void* interrupt_watch(void* argc){
   int sig_caught;    /* signal caught       */
   size_t i;
-  int array_sz = sizeof(tids)/sizeof(pthread_t);
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
     perror("sensing/ co_loop:failed to set cancel state");
     exit(EXIT_FAILURE);
   }
+  printf("We are now going to wait for system signal\n");
   if(sigwait (&signal_mask, &sig_caught)!=0){
     perror("sensing/main: error setting up the signal listeners");
   }
+  printf("We have received some signal\n");
   switch (sig_caught) {
     case SIGINT:
     case SIGTERM:
     case SIGKILL:
-      for (i = 0; i < array_sz; i++) {
-        pthread_cancel(tids[i]);
+      printf("We have positively caught the kill signal \n");
+      for (i = 0; i < poolSz; i++) {
+        pthread_cancel(pool[i]);
       }
       break;
     default:
@@ -201,17 +229,10 @@ void* co_loop(void* argc){
   pthread_exit(0);
 }
 void* co2_loop(void* argc){
-  sigset_t   signal_mask;
-  sigemptyset (&signal_mask);
-  sigaddset (&signal_mask, SIGINT);
-  sigaddset (&signal_mask, SIGTERM);
-  if(pthread_sigmask (SIG_BLOCK, &signal_mask, NULL)!=0){
-    fprintf(stderr, "Failed to set signal mask\n");
-    pthread_exit(1);
-  }
+  pthread_t self = pthread_self();
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
     fprintf(stderr, "Could not set the cancel state of thread : co2 loop\n");
-    pthread_exit(1);
+    pthread_exit(&self);
   }
   setup_alert(BLUE_GPIO,RED_GPIO,BUZZ_GPIO);
   mq135Result result;
@@ -222,23 +243,16 @@ void* co2_loop(void* argc){
       perror("sensing: failed to measure co2 content");
     }
     ambientnow.co2_ppm=result.ppmCo2;
-    printf("%.2f\t\t%.2f\n",result.ppmCo2, result.volts);
-    if (ambientnow.co2_ppm < Co2_LVL_WARN) {
-      // alert(&ok,0,0);
-      // printf("We have normal levels of Co2\n");
-    }
+    printf("%.2f\t\t%.2f\n",result.volts, result.ppmCo2);
+    if (ambientnow.co2_ppm < Co2_LVL_WARN) {alert(&ok,0,0);}
     else if (ambientnow.co2_ppm >= Co2_LVL_WARN && ambientnow.co2_ppm < Co2_LVL_ALARM){
-      // alert(&ok,1,0);
-      // printf("We have alarming levels of co2\n");
+      alert(&ok,1,0);
     }
-    else {
-      // alert(&ok,2,0);
-      // printf("We have fatal levels of co2\n");
-    }
+    else {alert(&ok,2,0);}
     pthread_mutex_unlock(&lock);
     usleep(2*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
   }
-  pthread_exit(0);
+  pthread_exit(&self);
 }
 void* temp_loop(void* argc){
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
