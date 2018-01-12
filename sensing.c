@@ -144,7 +144,10 @@ int main(int argc, char const *argv[]) {
   act.sa_flags = SA_SIGINFO;
   if (sigaction(SIGINT, &act, NULL) < 0) {perror ("sigaction");exit(1);}
   if (sigaction(SIGTERM, &act, NULL) < 0) {perror ("sigaction");exit(1);}
-  if (sigaction(SIGKILL, &act, NULL) < 0) {perror ("sigaction");exit(1);}
+  if (sigaction(SIGHUP, &act, NULL) < 0) {perror ("sigaction");exit(1);}
+  /*it SIGKILL, SIGSTOP cannot be blocked , ignored or captured, this would lead to sigaction fault
+  refer here https://stackoverflow.com/questions/18088924/signal-handler-function-catches-sigkill-the-first-3-times*/
+  // if (sigaction(SIGKILL, &act, NULL) < 0) {perror ("sigaction");exit(1);}
   /*We then make a mask which all the worker threads would be inheriting
   We want all the worker threads to basically block the 3 signasl from the system
   By design then the main thread the only contender to handle the kill signals*/

@@ -10,7 +10,8 @@ int main(int argc, char const *argv[]) {
   // setting up the listeners for the signals
   signal(SIGINT, before_kill);
   signal(SIGTERM, before_kill);
-  signal(SIGKILL, before_kill);
+  signal(SIGHUP, before_kill);
+  // signal(SIGKILL, before_kill); //<< SIGKILL and SIGSTOP cannot be caught blocked or ignored
   wiringPiSetupGpio();
   pinMode(RESTART_GPIO, INPUT);
   pinMode(SHUTD_GPIO, INPUT);
