@@ -299,12 +299,11 @@ void* display_loop(void* argc){
     perror("sensing/ co_loop:failed to set cancel state");
     exit(EXIT_FAILURE);
   }
-  // char message[80];
   if(setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3)<0){
     fprintf(stderr, "Error setting up the the LCD \n");
     pthread_exit(0);
   };
-  lcd_message("We are about to start readings");
+  lcd_clear();
   while (1) {
     pthread_mutex_lock(&lock);
     display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,ambientnow.co_ppm);
