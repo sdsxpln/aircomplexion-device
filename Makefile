@@ -2,8 +2,7 @@
 
 all: aircomplexion
 testing:
-	gcc -c -g -Wall -DJRNL=1 journal.c -I ./include -o ./lib/journal.o
-	gcc -g testing.c -o ./bin/testing -I ./include ./lib/journal.o
+	gcc testing.c -o ./bin/testing -I ./include ./lib/adc.o
 
 aircomplexion: sensors
 	ar crv ./lib/libaircomplexion.a ./lib/*

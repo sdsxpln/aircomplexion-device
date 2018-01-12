@@ -128,8 +128,7 @@ void main_archive(){
   clear_all_alerts();
   pthread_mutex_destroy(&lock);
 }
-
-pthread_t  pool[2]; //<<< all the threads go in here ..
+pthread_t  pool[5]; //<<< all the threads go in here ..
 int poolSz  = sizeof(pool)/sizeof(pthread_t);
 /*this is run whn you have signal incoming from the system  - this would help in evicting all the threads*/
 static void cleanup (int sig, siginfo_t *siginfo, void *context){
@@ -163,11 +162,23 @@ int main(int argc, char const *argv[]) {
     fprintf(stderr, "Failed to set signal mask\n");
     exit(1);
   }
-  if (pthread_create(&pool[0], NULL,&co2_loop, NULL)!=0) {
+  if (pthread_create(&pool[0], NULL,&display_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
-  if (pthread_create(&pool[1], NULL,&display_loop, NULL)!=0) {
+  if (pthread_create(&pool[1], NULL,&ldr_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    exit(1);
+  }
+  if (pthread_create(&pool[2], NULL,&co2_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    exit(1);
+  }
+  if (pthread_create(&pool[3], NULL,&temp_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    exit(1);
+  }
+  if (pthread_create(&pool[4], NULL,&co_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
@@ -223,8 +234,8 @@ void* co_loop(void* argc){
   while (1) {
     heater_full_power(MQ7_HEATER_GPIO,npn_invert);//full power heater for 60 secs
     usleep(60*SECSTOMICROSECS);
-    // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
-    // partial power heater for 90 secs
+    // // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
+    // // partial power heater for 90 secs
     heater_power(0.10, MQ7_HEATER_GPIO, npn_invert);
     usleep(90*SECSTOMICROSECS);
     pthread_mutex_lock(&lock);
@@ -232,7 +243,7 @@ void* co_loop(void* argc){
       perror("sensing/co_loop: failed to read co content");
     }
     ambientnow.co_ppm=result.co_ppm; //psuhing to a shared structure
-    // printf("CO : %.2f\n", result.co_ppm);
+    printf("%.2f\n",result.co_ppm);
     pthread_mutex_unlock(&lock);
     heater_full_power(MQ7_HEATER_GPIO, npn_invert);
     // sleep only for 2 seconds before the next reading
@@ -262,7 +273,7 @@ void* co2_loop(void* argc){
     }
     else {alert(&ok,2,0);}
     pthread_mutex_unlock(&lock);
-    usleep(2*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
+    usleep(5*SECSTOMICROSECS); // we need co2 to be measured every 2 seconds
   }
   pthread_exit(&self);
 }
@@ -317,7 +328,7 @@ void* ldr_loop(void* argc){
     }
     ambientnow.light_cent = result.light;
     pthread_mutex_unlock(&lock);
-    usleep(5*SECSTOMICROSECS);
+    usleep(2*SECSTOMICROSECS);
   }
   pthread_exit(0);
 }
