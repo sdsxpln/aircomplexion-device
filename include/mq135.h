@@ -18,6 +18,6 @@ typedef struct {
   float ppmCo2;
   float volts;
 }mq135Result;
-int ppm_co2(int adschn, int fcalibrate, mq135Result* result);
+int ppm_co2(int adschn, mq135Result* result);
 
 #endif

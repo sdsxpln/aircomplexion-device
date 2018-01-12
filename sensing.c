@@ -105,7 +105,6 @@ int main_test(int argc, char const *argv[]) {
 }
 int main(int argc, char const *argv[]) {
   wiringPiSetupGpio();
-  #if(TEST<=0)
   int ok =0;
   // instantiating the lock here
   sigemptyset (&signal_mask);
@@ -136,7 +135,7 @@ int main(int argc, char const *argv[]) {
   // if (pthread_create(&tids[3], NULL,&co_loop, NULL)!=0) {
   //   printf("Failed to start activity thread\n");
   //   exit(EXIT_FAILURE);
-  // // }
+  // }
   if (pthread_create(&tids[3], NULL,&display_loop, NULL)!=0) {
     printf("Failed to start activity thread\n");
     exit(EXIT_FAILURE);
@@ -158,25 +157,8 @@ int main(int argc, char const *argv[]) {
   mq7_shutdown(MQ7_HEATER_GPIO,1);
   clear_all_alerts();
   pthread_mutex_destroy(&lock);
-  #else
-  // this is the area where we are expecting some test code to run
-    mq135Result result;
-    int ret = 0;
-    int count  = 0;
-    while(1){
-
-        if((ret =ppm_co2(MQ135_CHANNEL,0,&result))!=0){
-          fprintf(stderr, "Error reading the Co2 channel\n");
-          printf("Result value we received from ppm_co2 %.2f\n", result.ppmCo2);
-        }
-        // this hwere we know the co2 reading is kind of ok
-        // we can go ahead to display that
-        printf("%d]%.2f\t%.4f\n", count,result.ppmCo2,result.volts);
-        count++;
-        usleep(1*SECSTOMICROSECS);
-    }
-  #endif
   exit(EXIT_SUCCESS);
+
 }
 void* interrupt_watch(void* argc){
   int sig_caught;    /* signal caught       */
@@ -200,6 +182,7 @@ void* interrupt_watch(void* argc){
     default:
       printf("Caught the signal but not the one expected\n");
   }
+  pthread_exit(0);
 }
 void* co_loop(void* argc){
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
@@ -238,7 +221,7 @@ void* co2_loop(void* argc){
   int ok =0;
   while (1) {
     pthread_mutex_lock(&lock);
-    if(ppm_co2(MQ135_CHANNEL,0,&result)!=0){
+    if(ppm_co2(MQ135_CHANNEL,&result)!=0){
       perror("sensing: failed to measure co2 content");
     }
     ambientnow.co2_ppm=result.ppmCo2;
@@ -281,7 +264,7 @@ void* display_loop(void* argc){
     perror("sensing/ co_loop:failed to set cancel state");
     exit(EXIT_FAILURE);
   }
-  char message[80];
+  // char message[80];
   setup_lcd_4bitmode(LCD_ROWS,LCD_COLS,LCD_RS,LCD_E,LCD_D0,LCD_D1,LCD_D2,LCD_D3);
   while (1) {
     pthread_mutex_lock(&lock);
@@ -317,7 +300,6 @@ void* uplink_loop(void* argc){
     exit(EXIT_FAILURE);
   }
   int isAuth =device_authorize(); // << cannot get this inside the loop - we would be wasting server calls that way
-
   while (1) {
     if (isAuth<0) { break;} //<< if the device is not authorised we would not allow any furhter uplinking pings
     pthread_mutex_lock(&lock);
