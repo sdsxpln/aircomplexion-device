@@ -29,18 +29,21 @@ void  setup_lcd_8bitmode(int rows, int cols, int rs, int e,
 }
 void display_readings(float temp, float light, float co2, float co){
   // this takes in the specific readings instead of the string message and does the job of placing them right
-  char stream[20];
+  char stream[128];
   lcdClear(lcd);
   if (temp >0.0) {
+    // printf("temp..\n");
     sprintf(stream, "T:%.1f\337C",temp);
     lcdPuts(lcd ,stream);
   }
   if (light>0.0) {
+    // printf("light..\n");
     sprintf(stream, " L:%.1f%%", light);
     lcdPuts(lcd ,stream);
   }
   lcdPosition(lcd, 0,1);
   if (co2 >0.0) {
+    // printf("gaseous\n");
     sprintf(stream, "Co2:%.1f CO:%.1f", co2,co);
     lcdPuts(lcd ,stream);
   }

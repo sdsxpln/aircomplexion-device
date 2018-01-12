@@ -162,23 +162,23 @@ int main(int argc, char const *argv[]) {
     fprintf(stderr, "Failed to set signal mask\n");
     exit(1);
   }
-  if (pthread_create(&pool[0], NULL,&display_loop, NULL)!=0) {
+  if (pthread_create(&pool[0], NULL,&ldr_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
-  if (pthread_create(&pool[1], NULL,&ldr_loop, NULL)!=0) {
+  if (pthread_create(&pool[1], NULL,&co2_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
-  if (pthread_create(&pool[2], NULL,&co2_loop, NULL)!=0) {
+  if (pthread_create(&pool[2], NULL,&temp_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
-  if (pthread_create(&pool[3], NULL,&temp_loop, NULL)!=0) {
+  if (pthread_create(&pool[3], NULL,&co_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
-  if (pthread_create(&pool[4], NULL,&co_loop, NULL)!=0) {
+  if (pthread_create(&pool[4], NULL,&display_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
