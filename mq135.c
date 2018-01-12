@@ -30,7 +30,7 @@ int ppm_co2(int adschn, mq135Result* result){
   float ratioRsRo=1, Vrl=0.00, Rs =0.00;
   if (Ro<=0) {ppm_co2_calibrate();} //<< calibrate if not done
   /*Voltage across the load resistance can be measured using the ADS - is the voltage output from the sensor
-  observe the gain we are setting to : +- 4.02 , we have observed that mq135 can move upto this level*/
+  observe the gain we are setting to : +- 6.1 , we have observed that mq135 can move upto this level*/
   if(ads115_read_channel(0x48,adschn, GAIN_ONE, DR_128,&Vrl)!=0){
     perror("mq135: error reading the ads channel");
     return -1;

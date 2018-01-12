@@ -70,41 +70,7 @@ pthread_t tids[5];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
-int main_test(int argc, char const *argv[]) {
-  // co_loop(NULL);
-  // float readings[4];
-  // while (1) {
-  //   // if (ads115_read_all_channels(0x48,readings)!=0) {
-  //   //   perror("This was not well read by ads channel");
-  //   // }
-  //   // printf("%.4f\t\t%.4f\t\t%.4f\t\t%.4f\n", readings[0],readings[1],readings[2], readings[3]);
-  //   // float channel;
-  //   // if (ads115_read_channel(0x48,2,GAIN_TWO,DR_128, &channel)!=0) {
-  //   //   perror("Error reading a single channel");
-  //   // }
-  //   // printf("Channel 2: %.3f\n", channel);
-  //   // lm35Result result;
-  //   // if(airtemp_now(LM35_CHANNEL,CELCIUS, &result)!=0){
-  //   //   perror("Error reading the temperature..");
-  //   // }
-  //   // printf("Temp: %.3f\n", result.temp);
-  //
-  //   sleep(2);
-  // }
-  wiringPiSetupGpio();
-  int npn_invert =1;
-  heater_full_power(MQ7_HEATER_GPIO,npn_invert );
-  printf("Heater started in full power mode..\n");
-  sleep(5);
-  heater_power(0.10,MQ7_HEATER_GPIO,npn_invert);
-  printf("Heater now in partial power mode..\n");
-  sleep(30);
-  printf("Heater now being turned off\n");
-  heater_off(MQ7_HEATER_GPIO, npn_invert);
-  return 0;
-}
-int main(int argc, char const *argv[]) {
-  wiringPiSetupGpio();
+void start_main(){
   int ok =0;
   // instantiating the lock here
   sigemptyset (&signal_mask);
@@ -157,6 +123,29 @@ int main(int argc, char const *argv[]) {
   mq7_shutdown(MQ7_HEATER_GPIO,1);
   clear_all_alerts();
   pthread_mutex_destroy(&lock);
+}
+void start_test(){
+  pthread_t  pool[1]; //<<< all the threads go in here ..
+  printf("We are now starting testing module\n");
+  if (pthread_create(&pool[0], NULL,&co2_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    return;
+  }
+  size_t i;
+  int array_sz = sizeof(pool)/sizeof(pthread_t);
+  for (i = 0; i < array_sz; i++) {
+    pthread_join(pool[i], NULL);
+  }
+  fprintf(stderr, "All the sensing loops have existed\n");
+  return;
+}
+int main(int argc, char const *argv[]) {
+  wiringPiSetupGpio();
+  #ifdef TEST
+    start_test();
+  #else
+    start_main();
+  #endif
   exit(EXIT_SUCCESS);
 
 }
@@ -212,9 +201,17 @@ void* co_loop(void* argc){
   pthread_exit(0);
 }
 void* co2_loop(void* argc){
+  sigset_t   signal_mask;
+  sigemptyset (&signal_mask);
+  sigaddset (&signal_mask, SIGINT);
+  sigaddset (&signal_mask, SIGTERM);
+  if(pthread_sigmask (SIG_BLOCK, &signal_mask, NULL)!=0){
+    fprintf(stderr, "Failed to set signal mask\n");
+    pthread_exit(1);
+  }
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
-    perror("sensing/ co_loop:failed to set cancel state");
-    exit(EXIT_FAILURE);
+    fprintf(stderr, "Could not set the cancel state of thread : co2 loop\n");
+    pthread_exit(1);
   }
   setup_alert(BLUE_GPIO,RED_GPIO,BUZZ_GPIO);
   mq135Result result;
@@ -225,16 +222,17 @@ void* co2_loop(void* argc){
       perror("sensing: failed to measure co2 content");
     }
     ambientnow.co2_ppm=result.ppmCo2;
+    printf("%.2f\t\t%.2f\n",result.ppmCo2, result.volts);
     if (ambientnow.co2_ppm < Co2_LVL_WARN) {
-      alert(&ok,0,0);
+      // alert(&ok,0,0);
       // printf("We have normal levels of Co2\n");
     }
     else if (ambientnow.co2_ppm >= Co2_LVL_WARN && ambientnow.co2_ppm < Co2_LVL_ALARM){
-      alert(&ok,1,0);
+      // alert(&ok,1,0);
       // printf("We have alarming levels of co2\n");
     }
     else {
-      alert(&ok,2,0);
+      // alert(&ok,2,0);
       // printf("We have fatal levels of co2\n");
     }
     pthread_mutex_unlock(&lock);
