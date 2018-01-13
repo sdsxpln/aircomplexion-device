@@ -66,7 +66,7 @@ typedef struct {
   char err[128];
 }ambience; //this structure represents the conditions collectively that are thread safe
 ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; //presetting the values in the structure
-pthread_t tids[5];
+pthread_t tids[4];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
 // More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
@@ -140,6 +140,7 @@ static void cleanup (int sig, siginfo_t *siginfo, void *context){
 int main(int argc, char const *argv[]) {
   /*We are instructing the main thread to setup actions tht are triggered on the signal receipt
   this helps in cleaning up and the activities*/
+  wiringPiSetupGpio();
   struct sigaction act;
   memset (&act, '\0', sizeof(act));
   act.sa_sigaction = &cleanup;
@@ -154,6 +155,7 @@ int main(int argc, char const *argv[]) {
   /*We then make a mask which all the worker threads would be inheriting
   We want all the worker threads to basically block the 3 signasl from the system
   By design then the main thread the only contender to handle the kill signals*/
+
   sigset_t   signal_mask;
   sigemptyset (&signal_mask);
   sigaddset (&signal_mask, SIGINT);
@@ -161,6 +163,11 @@ int main(int argc, char const *argv[]) {
   if(pthread_sigmask (SIG_BLOCK, &signal_mask, NULL)!=0){
     fprintf(stderr, "Failed to set signal mask\n");
     exit(1);
+  }
+
+  if (pthread_mutex_init(&lock, NULL)!=0) {
+    printf("Error starting a new thread, exiting application\n");
+    exit(EXIT_FAILURE);
   }
   if (pthread_create(&pool[0], NULL,&ldr_loop, NULL)!=0) {
     printf("Failed start co2 loop on a thread\n");
@@ -183,6 +190,7 @@ int main(int argc, char const *argv[]) {
     exit(1);
   }
   /*once all the threads are spawned we want the main thread to be back again to it default bahaviour*/
+
   if(pthread_sigmask (SIG_UNBLOCK, &signal_mask, NULL)!=0){
     fprintf(stderr, "Failed to set signal mask\n");
     exit(1);
@@ -192,9 +200,9 @@ int main(int argc, char const *argv[]) {
     pthread_join(pool[i], NULL);
   }
   fprintf(stderr, "All the sensing loops have exited\n");
-  // lcd_clear(); //<<turn this on when you have the display loop else this would give segmentation fault
-  clear_all_alerts();
   lcd_clear();
+  clear_all_alerts();
+  mq7_shutdown(MQ7_HEATER_GPIO,1);
   pthread_mutex_destroy(&lock);
   exit(EXIT_SUCCESS);
 }
@@ -225,6 +233,7 @@ void* interrupt_watch(void* argc){
   pthread_exit(0);
 }
 void* co_loop(void* argc){
+  pthread_t self = pthread_self();
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
     perror("sensing/ co_loop:failed to set cancel state");
     exit(EXIT_FAILURE);
@@ -232,24 +241,26 @@ void* co_loop(void* argc){
   int npn_invert = 1;
   mq7result result;
   while (1) {
+    pthread_mutex_lock(&lock);
     heater_full_power(MQ7_HEATER_GPIO,npn_invert);//full power heater for 60 secs
+    pthread_mutex_unlock(&lock);
     usleep(60*SECSTOMICROSECS);
-    // // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
-    // // partial power heater for 90 secs
-    heater_power(0.10, MQ7_HEATER_GPIO, npn_invert);
+    // we know from rpi pin voltage it is 5.11 V so 28% makes 1.43V
+    // // // partial power heater for 90 secs
+    pthread_mutex_lock(&lock);
+    heater_power(0.10, MQ7_HEATER_GPIO, npn_invert); //<< partial power 90 secs
+    pthread_mutex_unlock(&lock);
     usleep(90*SECSTOMICROSECS);
     pthread_mutex_lock(&lock);
     if (ppm_co(MQ7_CHANNEL, &result)!=0){
       perror("sensing/co_loop: failed to read co content");
     }
-    ambientnow.co_ppm=result.co_ppm; //psuhing to a shared structure
-    printf("%.2f\n",result.co_ppm);
-    pthread_mutex_unlock(&lock);
+    ambientnow.co_ppm=result.co_ppm; // << pushing to shared structure
     heater_full_power(MQ7_HEATER_GPIO, npn_invert);
-    // sleep only for 2 seconds before the next reading
-    usleep(2*SECSTOMICROSECS);
+    pthread_mutex_unlock(&lock);
+    usleep(2*SECSTOMICROSECS); //<< small slumber before we can go to next reading
   }
-  pthread_exit(0);
+  pthread_exit(&self);
 }
 void* co2_loop(void* argc){
   pthread_t self = pthread_self();
@@ -308,7 +319,7 @@ void* display_loop(void* argc){
     pthread_mutex_lock(&lock);
     display_readings(ambientnow.temp_celcius, ambientnow.light_cent*100,ambientnow.co2_ppm,ambientnow.co_ppm);
     pthread_mutex_unlock(&lock);
-    usleep(2*SECSTOMICROSECS); //refresh the display every 2 second
+    usleep(1*SECSTOMICROSECS); //refresh the display every 2 second
   }
   lcd_clear();
   pthread_exit(0);
@@ -331,7 +342,6 @@ void* ldr_loop(void* argc){
   }
   pthread_exit(0);
 }
-
 void* uplink_loop(void* argc){
   if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
     perror("sensing/ co_loop:failed to set cancel state");

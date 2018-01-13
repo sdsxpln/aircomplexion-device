@@ -1,7 +1,7 @@
 #include "mq7.h"
 
 void heater_full_power(int gpio,int npn_invert){
-  wiringPiSetupGpio();
+  // wiringPiSetupGpio();
   pinMode(gpio, OUTPUT);
   // npn transistor may act like an inverotr hence the provision
   // we may have a setup where the npn may be parallel to the sensor load , in which case turning the heater on is actually lowering the gpio
@@ -10,14 +10,14 @@ void heater_full_power(int gpio,int npn_invert){
   // printf("Heater in full power mode..\n");
 }
 void heater_off(int gpio, int npn_invert){
-  wiringPiSetupGpio();
+  // wiringPiSetupGpio();
   pinMode(gpio, OUTPUT);
   if(npn_invert==0){digitalWrite(gpio,LOW);}
   else{digitalWrite(gpio,HIGH);}
   // printf("Heater is now turned off\n");
 }
 void heater_power(float powerpercent , int gpio, int npn_invert){
-  wiringPiSetupGpio();
+  // wiringPiSetupGpio();
   pinMode(gpio, PWM_OUTPUT);
   pwmSetMode(PWM_MODE_MS);
   pwmSetRange(PWM_RANGE);

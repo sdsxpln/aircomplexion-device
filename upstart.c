@@ -46,10 +46,16 @@ void on_force_restart(){
 void startloop_wait(){
   pid=fork();
   if (pid==0) {
-    static char *argv[]={};
-    /*execv would replace the child process with the running sensing loop*/
-    if ((execv("/home/pi/src/aircomplexion-device/bin/sensing",argv))==-1){
-      perror("Failed to start the looping process");
+    // static char *argv[]={"sh", "-c", "sudo", "/home/pi/src/aircomplexion-device/bin/sensing"};
+    // /*execv would replace the child process with the running sensing loop*/
+    // if ((execvp(argv[0],argv))==-1){
+    //   perror("Failed to start the looping process");
+    //   exit(127);
+    // }
+    /*Whats important to note that is that the program has to be run with sudo profile.
+    since the sensing loop employs PWM cycle and if not run with sudo profile it just hangs up*/
+    if(system("sudo /home/pi/src/aircomplexion-device/bin/sensing")<0){
+      fprintf(stderr, "Failed to start the child sensing process\n");
       exit(127);
     }
   }
