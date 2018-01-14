@@ -55,7 +55,7 @@ void* alert_loop(void* argc);
 void* co2_loop(void* argc);
 void* co_loop(void* argc);
 void* uplink_loop(void* argc);
-void* interrupt_watch(void* argc); //this one responds to the incoming system signals
+
 // int setup_interrupts(void* on_restart, void* on_shutd); //this setups the interrupts from the buttons using wiringpi isr
 // interrupt handlers
 typedef struct {
@@ -66,69 +66,9 @@ typedef struct {
   char err[128];
 }ambience; //this structure represents the conditions collectively that are thread safe
 ambience ambientnow = {.co2_ppm=0, .temp_celcius=0, .light_cent=0, .co_ppm=0}; //presetting the values in the structure
-pthread_t tids[4];
 pthread_mutex_t lock;
 static sigset_t   signal_mask;  /* signals to block         */
-// More often than not , yo find the need to check the readings from the ADS - this can give you the readings correctly
-void main_archive(){
-  int ok =0;
-  // instantiating the lock here
-  sigemptyset (&signal_mask);
-  sigaddset (&signal_mask, SIGINT);
-  sigaddset (&signal_mask, SIGTERM);
-  /*We dont want any of the threads including this one to handle any of the terminal signals
-  We woudl want only one thread only to handle the system signals*/
-  if(pthread_sigmask (SIG_BLOCK, &signal_mask, NULL)!=0){
-    perror("sensing/main:failed to set signal block configuration");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_mutex_init(&lock, NULL)!=0) {
-    printf("Error starting a new thread, exiting application\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[0], NULL,&ldr_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[1], NULL,&temp_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[2], NULL,&co2_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  // if (pthread_create(&tids[3], NULL,&co_loop, NULL)!=0) {
-  //   printf("Failed to start activity thread\n");
-  //   exit(EXIT_FAILURE);
-  // }
-  if (pthread_create(&tids[3], NULL,&display_loop, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  if (pthread_create(&tids[4], NULL,&interrupt_watch, NULL)!=0) {
-    printf("Failed to start activity thread\n");
-    exit(EXIT_FAILURE);
-  }
-  // if (pthread_create(&tids[5], NULL,&uplink_loop, NULL)!=0) {
-  //   printf("Failed to start activity thread\n");
-  //   exit(EXIT_FAILURE);
-  // }
-  if(pthread_sigmask (SIG_UNBLOCK, &signal_mask, NULL)!=0){
-    perror("sensing/main:failed to set signal block configuration");
-    exit(EXIT_FAILURE);
-  }
-  size_t i;
-  int array_sz = sizeof(tids)/sizeof(pthread_t);
-  for (i = 0; i < array_sz; i++) {
-    pthread_join(tids[i], NULL);
-  }
-  lcd_clear();
-  mq7_shutdown(MQ7_HEATER_GPIO,1);
-  clear_all_alerts();
-  pthread_mutex_destroy(&lock);
-}
-pthread_t  pool[5]; //<<< all the threads go in here ..
+pthread_t  pool[6]; //<<< all the threads go in here ..
 int poolSz  = sizeof(pool)/sizeof(pthread_t);
 /*this is run whn you have signal incoming from the system  - this would help in evicting all the threads*/
 static void cleanup (int sig, siginfo_t *siginfo, void *context){
@@ -189,6 +129,10 @@ int main(int argc, char const *argv[]) {
     printf("Failed start co2 loop on a thread\n");
     exit(1);
   }
+  if (pthread_create(&pool[5], NULL,&uplink_loop, NULL)!=0) {
+    printf("Failed start co2 loop on a thread\n");
+    exit(1);
+  }
   /*once all the threads are spawned we want the main thread to be back again to it default bahaviour*/
 
   if(pthread_sigmask (SIG_UNBLOCK, &signal_mask, NULL)!=0){
@@ -205,32 +149,6 @@ int main(int argc, char const *argv[]) {
   mq7_shutdown(MQ7_HEATER_GPIO,1);
   pthread_mutex_destroy(&lock);
   exit(EXIT_SUCCESS);
-}
-void* interrupt_watch(void* argc){
-  int sig_caught;    /* signal caught       */
-  size_t i;
-  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)!=0) {
-    perror("sensing/ co_loop:failed to set cancel state");
-    exit(EXIT_FAILURE);
-  }
-  printf("We are now going to wait for system signal\n");
-  if(sigwait (&signal_mask, &sig_caught)!=0){
-    perror("sensing/main: error setting up the signal listeners");
-  }
-  printf("We have received some signal\n");
-  switch (sig_caught) {
-    case SIGINT:
-    case SIGTERM:
-    case SIGKILL:
-      printf("We have positively caught the kill signal \n");
-      for (i = 0; i < poolSz; i++) {
-        pthread_cancel(pool[i]);
-      }
-      break;
-    default:
-      printf("Caught the signal but not the one expected\n");
-  }
-  pthread_exit(0);
 }
 void* co_loop(void* argc){
   pthread_t self = pthread_self();
@@ -357,7 +275,7 @@ void* uplink_loop(void* argc){
       // << ideally this should spit the error in the error.log but for now we are just hoping this is working
     }
     pthread_mutex_unlock(&lock);
-    usleep(3*SECSTOMICROSECS);
+    usleep(10*SECSTOMICROSECS);
   }
   pthread_exit(0);
 }
